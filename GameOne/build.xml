@@ -1,13 +1,13 @@
-<project name="SymbolicMath" default="dev" basedir=".">
-    <description> Build file for Game project </description>
-    <property name="tools-dir" value="tools"/>
+<project name="GameOne" default="rel" basedir=".">
+    <description> Build file for GameOne JavaScript project </description>
+    <property name="build-tools-dir" value="../BuildTools"/>
     <property name="source-dir" value="src"/>
     <property name="build-dir" value="build"/>
     <property name="site-dir" value="site"/>
-    <property name="concat-target" value="game-concat.js"/>
-    <property name="preprocess-target" value="game-preprocess.js"/>
-    <property name="dev-target" value="game-debug.js"/>
-    <property name="rel-target" value="game.js"/>
+    <property name="concat-target" value="GameOne-concat.js"/>
+    <property name="preprocess-target" value="GameOne-preprocess.js"/>
+    <property name="dev-target" value="GameOne-debug.js"/>
+    <property name="rel-target" value="GameOne.js"/>
 
     <target name="dev" depends="dev-init, js-copy" description="Development build"/>
 
@@ -26,11 +26,11 @@
     <target name="init">
         <tstamp/>
         <mkdir dir="${build-dir}"/>
-        <property file="ant.properties"/>
+        <property file="${build-tools-dir}/ant.properties"/>
     </target>
 
     <target name="js-concatenate" depends="init">
-        <concat destfile="${build-dir}\${concat-target}">
+        <concat destfile="${build-dir}/${concat-target}">
             <!-- file order is important -->
             <fileset dir="${source-dir}" includes="macros.h" />
             <fileset dir="${source-dir}" includes="vector2d.js" />
@@ -41,30 +41,29 @@
     </target>
 
     <target name="js-preprocess" depends="js-concatenate">
-        <exec executable="${cygwin-bin-dir}\cpp-4">
+        <exec executable="${cygwin-bin-dir}/cpp-4">
             <arg value="-P"/>
             <arg value="${js-preprocess-switches}"/>
-            <arg value="${build-dir}\${concat-target}"/>
-            <arg value="${build-dir}\${preprocess-target}"/>
-
+            <arg value="${build-dir}/${concat-target}"/>
+            <arg value="${build-dir}/${preprocess-target}"/>
         </exec>
     </target>
 
     <target name="js-copy" depends="js-preprocess">
-        <copy file="${build-dir}\${preprocess-target}" tofile="${site-dir}\${final-target}"/>
+        <copy file="${build-dir}/${preprocess-target}" tofile="${site-dir}/${final-target}"/>
     </target>
 
     <target name="js-minify" depends="js-preprocess">
-        <java jar="${tools-dir}\${yui-compressor.jar}" fork="true">
+        <java jar="${build-tools-dir}/${yui-compressor.jar}" fork="true">
             <arg value="-o"/>
-            <arg value="${site-dir}\${final-target}"/>
-            <arg value="${build-dir}\${preprocess-target}"/>
+            <arg value="${site-dir}/${final-target}"/>
+            <arg value="${build-dir}/${preprocess-target}"/>
         </java>
     </target>
 
     <target name="clean" description="Remove all artifacts of the build process" >
         <delete dir="${build-dir}"/>
-        <delete file="${site-dir}\${dev-target}"/>
-        <delete file="${site-dir}\${rel-target}"/>
+        <delete file="${site-dir}/${dev-target}"/>
+        <delete file="${site-dir}/${rel-target}"/>
     </target>
 </project>

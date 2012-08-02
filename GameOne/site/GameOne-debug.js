@@ -54,13 +54,13 @@ var scale = 1.0;
 function initPage() {
     var target = d3.select("#display");
     var svg = target.append("svg").attr("class", "gameDisplay");
+    svg.style("opacity", 1.0e-6)
+        .transition().duration(1000)
+        .style("opacity", 1.0);
     svg.append("rect")
         .attr("class", "gameBackground")
         .attr("width", "100%")
         .attr("height", "100%");
-    svg.style("opacity", 1.0e-6)
-        .transition().duration(1000)
-        .style("opacity", 1.0);
     var child = svg.append("g").attr("class", "gameDisplay");
     svg.call (d3.behavior.zoom()
         .translate ([0, 0])

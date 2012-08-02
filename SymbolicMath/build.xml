@@ -1,13 +1,13 @@
-<project name="SymbolicMath" default="dev" basedir=".">
-    <description> Build file for Symbolic Math Javascript project </description>
-    <property name="tools-dir" value="tools"/>
+<project name="SymbolicMath" default="rel" basedir=".">
+    <description> Build file for Symbolic Math JavaScript project </description>
+    <property name="build-tools-dir" value="../BuildTools"/>
     <property name="source-dir" value="src"/>
     <property name="build-dir" value="build"/>
     <property name="site-dir" value="site"/>
-    <property name="concat-target" value="SM-concat.js"/>
-    <property name="preprocess-target" value="SM-preprocess.js"/>
-    <property name="dev-target" value="SM-debug.js"/>
-    <property name="rel-target" value="SM.js"/>
+    <property name="concat-target" value="SymbolicMath-concat.js"/>
+    <property name="preprocess-target" value="SymbolicMath-preprocess.js"/>
+    <property name="dev-target" value="SymbolicMath-debug.js"/>
+    <property name="rel-target" value="SymbolicMath.js"/>
 
     <target name="dev" depends="dev-init, js-copy" description="Development build"/>
 
@@ -26,7 +26,7 @@
     <target name="init">
         <tstamp/>
         <mkdir dir="${build-dir}"/>
-        <property file="ant.properties"/>
+        <property file="${build-tools-dir}/ant.properties"/>
     </target>
 
     <target name="js-concatenate" depends="init">
@@ -63,7 +63,7 @@
     </target>
 
     <target name="js-minify" depends="js-preprocess">
-        <java jar="${tools-dir}\${yui-compressor.jar}" fork="true">
+        <java jar="${build-tools-dir}/${yui-compressor.jar}" fork="true">
             <arg value="-o"/>
             <arg value="${site-dir}\${final-target}"/>
             <arg value="${build-dir}\${preprocess-target}"/>
