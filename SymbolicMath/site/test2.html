@@ -1,0 +1,50 @@
+<!doctype html> 
+<html>
+<head>
+    <title>Symbolic Math - Test Page</title>
+    <script type="text/javascript" src="SM-debug.js"></script>
+</head>
+<body onload="initPage();">
+<div id="display">display</div>
+<script type="text/javascript">
+
+    var values = { x: 4.0 };
+    var display = new String();
+
+    function Round(value, significance)
+    {
+        var multiplier = Math.pow (10, significance);
+        var scaledValue = value * multiplier;
+        scaledValue = Math.floor (scaledValue);
+        return (scaledValue / multiplier).toString ();
+        //return value.toString ();
+    }
+    
+    function Test(name, equation, expected)
+    {
+        var result = Round (equation.N (values), 6);
+        var expect = Round (expected, 6);
+        var test = (result == expect);
+        display += "<tr><td>" + name + "</td><td>" + equation.toString () + "</td><td>=</td><td align='right'>" + result + "</td><td align='right'>" + expect + "</td><td>" + (test ? "<div style='color: white;background-color: green'>PASS</div>" : "<div style='color: white;background-color: red'>FAIL</div>") + "</td></tr>\n";
+        return test;
+    }
+
+    function initPage()
+    {
+        display = "Test Results: <br>\n<table cellspacing='5'>";
+        display += "<tr><th>Name</th><th>Equation</th><th></th><th>Result</th><th>Expect</th><th>Test</th></tr>\n";
+
+        var pass = true;
+
+        if (pass)
+        {
+            var equation = SM.Multiply (2.0, 3.5, "x").Multiply (0).Simplify ();
+            pass &= Test ("Simplify * 2", equation, 2.0 * 3.5 * values.x * 0);
+        }
+        display += "</table></br>\n";
+
+        document.getElementById('display') .innerHTML = display;
+    }
+</script>
+</body>
+</html>

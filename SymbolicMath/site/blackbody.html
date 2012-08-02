@@ -1,0 +1,44 @@
+<!doctype html> 
+<html>
+<head>
+    <title>Symbolic Math - Blackbody</title>
+    <script type="text/javascript" src="SM-debug.js"></script>
+    <script type="text/javascript" src="d3.v2.js"></script> 
+</head>
+<body onload="initPage();">
+<div id="display">display</div>
+<script type="text/javascript">
+    function initPage()
+    {
+        var display = new String();
+        display = "<table cellspacing='5'>";
+        display += "<tr><th>Equation</th></tr>\n";
+
+        //var L = (2 * h * c * c) / (wavelength^5 * (e^((h * c) / (&lambda; * k * T)) - 1))
+        var hc2 = SM.Multiply (2.0, "h", "c", "c");
+        var exp = SM.Multiply ("h", "c").Divide (SM.Multiply ("&lambda;", "k", "T"));
+        var L = (hc2.Divide (SM.Power ("&lambda;", 5).Multiply (SM.Exp (exp).Subtract (1)))).Multiply (1.0e-9);
+        L = L.Simplify ();
+        display += "<tr><td>" + L.toString () + "</td></tr>\n";
+
+        display += "</table></br>\n";
+
+        document.getElementById('display').innerHTML = display;
+
+        // now evaluate the function
+        var sampler = new Sampler ();
+        sampler.values = {
+            T    : 5777              // Color Temperature - degrees K
+        };
+        sampler.domain = ["&lambda;", 220.0 * 1.0e-9, 1880 * 1.0e-9];
+        var graphData = sampler.Evaluate (L);
+
+        var plot = new Plot ();
+        plot.title = "Blackbody Radiation at " + sampler.values.T + "ºK";
+        plot.xAxisTitle = "Wavelength (nm)";
+        plot.yAxisTitle = "Spectral Radiance (W / m² / sr / nm)";
+        plot.FromGraphData (graphData);
+    }
+    
+</script> </body>
+</html>

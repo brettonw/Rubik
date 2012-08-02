@@ -1,0 +1,12 @@
+var Vector2d = Object.create (null);
+Vector2d.Create     = function(a)       { return {x:a[0], y:a[1]}; };
+Vector2d.XY         = function(x, y)    { return {x:x, y:y}; };
+Vector2d.Zero       = function()        { return {x:0.0, y:0.0}; };
+Vector2d.One        = function()        { return {x:1.0, y:1.0}; };
+Vector2d.Add        = function(a, b)    { return this.Create (a.x + b.x, a.y + b.y); };
+Vector2d.Subtract   = function(a, b)    { return this.Create (a.x - b.x, a.y - b.y); };
+Vector2d.Scale      = function(a, b)    { return this.Create (a.x * b, a.y * b); };
+Vector2d.Dot        = function(a, b)    { return (a.x * b.x) + (a.y * b.y); };
+Vector2d.Cross      = function(a, b)    { return (a.x * b.y) - (a.y * b.x); };
+Vector2d.NormSq     = function(a)       { return this.Dot (a, a); };
+Vector2d.Norm       = function(a)       { return Math.sqrt (this.NormSq (a)); };
