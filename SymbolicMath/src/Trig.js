@@ -15,16 +15,16 @@ Cos.Render = function(enclose) {
 };
 
 DERIVE_EXPR_ALIAS(Sin,Function)
-Cos.N = function(values) {
+Sin.N = function(values) {
     return Math.sin (_X.N(values));
 };
 
-Cos.D = function(values) {
+Sin.D = function(values) {
     var d = _X.D(values).Multiply (EXPR(Cos)(_X));
     return d.Simplify ();
 };
 
-Cos.Render = function(enclose) {
+Sin.Render = function(enclose) {
     return "Sin (" + _X.Render(false) + ")";
 };
 

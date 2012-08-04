@@ -1,3 +1,5 @@
+
+
 "use strict";
 var Expr = Object.create(null);
 Expr.MakeExpr = function(a) {
@@ -456,14 +458,14 @@ Cos.Render = function(enclose) {
     return "Cos (" + this.children[0].Render(false) + ")";
 };
 var Sin = Object.create(Expr, { typename : { value : "Function", writable : false, configurable : false, enumerable : true }})
-Cos.N = function(values) {
+Sin.N = function(values) {
     return Math.sin (this.children[0].N(values));
 };
-Cos.D = function(values) {
+Sin.D = function(values) {
     var d = this.children[0].D(values).Multiply (Object.create(Cos)._init(this.children[0]));
     return d.Simplify ();
 };
-Cos.Render = function(enclose) {
+Sin.Render = function(enclose) {
     return "Sin (" + this.children[0].Render(false) + ")";
 };
 var Exp = Object.create(Expr, { typename : { value : "Function", writable : false, configurable : false, enumerable : true }});

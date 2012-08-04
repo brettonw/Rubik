@@ -23,14 +23,30 @@
         <property name="js-preprocess-switches" value="-DRELEASE"/>
     </target>
 
-    <target name="init">
+	 <condition property="is-windows">
+		<os family="windows" />
+	 </condition>
+
+    <target name="init-windows" if="is-windows">
+        <property file="${build-tools-dir}/windows.ant.properties"/>
+    </target>
+
+	 <condition property="is-unix">
+		<os family="unix" />
+	 </condition>
+
+    <target name="init-unix" if="is-unix">
+        <property file="${build-tools-dir}/unix.ant.properties"/>
+    </target>
+
+    <target name="init" depends="init-windows, init-unix">
         <tstamp/>
         <mkdir dir="${build-dir}"/>
         <property file="${build-tools-dir}/ant.properties"/>
     </target>
 
     <target name="js-concatenate" depends="init">
-        <concat destfile="${build-dir}\${concat-target}">
+        <concat destfile="${build-dir}/${concat-target}">
             <!-- file order is important, at least for the first two files -->
             <fileset dir="${source-dir}" includes="macros.h" />
             <fileset dir="${source-dir}" includes="Expr.js" />
@@ -49,30 +65,44 @@
         </concat>
     </target>
 
-    <target name="js-preprocess" depends="js-concatenate">
-        <exec executable="${cygwin-bin-dir}\cpp-4">
+    <target name="js-preprocess-windows" if="is-windows">
+        <exec executable="${cpp}">
             <arg value="-P"/>
             <arg value="${js-preprocess-switches}"/>
-            <arg value="${build-dir}\${concat-target}"/>
-            <arg value="${build-dir}\${preprocess-target}"/>
+            <arg value="${build-dir}/${concat-target}"/>
+            <arg value="${build-dir}/${preprocess-target}"/>
         </exec>
     </target>
 
+    <target name="js-preprocess-unix" if="is-unix">
+        <exec executable="${gcc}">
+            <arg value="-E"/>
+            <arg value="-P"/>
+            <arg value="-xc++"/>
+            <arg value="${js-preprocess-switches}"/>
+            <arg value="-o${build-dir}/${preprocess-target}"/>
+            <arg value="${build-dir}/${concat-target}"/>
+        </exec>
+    </target>
+
+    <target name="js-preprocess" depends="js-concatenate, js-preprocess-windows, js-preprocess-unix">
+    </target>
+
     <target name="js-copy" depends="js-preprocess">
-        <copy file="${build-dir}\${preprocess-target}" tofile="${site-dir}\${final-target}"/>
+        <copy file="${build-dir}/${preprocess-target}" tofile="${site-dir}/${final-target}"/>
     </target>
 
     <target name="js-minify" depends="js-preprocess">
         <java jar="${build-tools-dir}/${yui-compressor.jar}" fork="true">
             <arg value="-o"/>
-            <arg value="${site-dir}\${final-target}"/>
-            <arg value="${build-dir}\${preprocess-target}"/>
+            <arg value="${site-dir}/${final-target}"/>
+            <arg value="${build-dir}/${preprocess-target}"/>
         </java>
     </target>
 
     <target name="clean" description="Remove all artifacts of the build process" >
         <delete dir="${build-dir}"/>
-        <delete file="${site-dir}\${dev-target}"/>
-        <delete file="${site-dir}\${rel-target}"/>
+        <delete file="${site-dir}/${dev-target}"/>
+        <delete file="${site-dir}/${rel-target}"/>
     </target>
 </project>
