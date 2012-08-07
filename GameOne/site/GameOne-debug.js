@@ -1,5 +1,3 @@
-
-
 "use strict";
 var Vector2d = Object.create (null);
 Vector2d.Create = function(a) { return {x:a[0], y:a[1]}; };

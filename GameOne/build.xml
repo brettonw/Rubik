@@ -1,11 +1,12 @@
 <project name="GameOne" default="rel" basedir=".">
     <description> Build file for GameOne JavaScript project </description>
     <property name="build-tools-dir" value="../BuildTools"/>
+  	<import file="${build-tools-dir}/common-build.xml"/>
+
     <property name="concat-target" value="GameOne-concat.js"/>
     <property name="preprocess-target" value="GameOne-preprocess.js"/>
     <property name="dev-target" value="GameOne-debug.js"/>
     <property name="rel-target" value="GameOne.js"/>
-  	<import file="${build-tools-dir}/common-build.xml"/>
 
     <target name="js-concatenate" depends="init">
         <concat destfile="${build-dir}/${concat-target}">
