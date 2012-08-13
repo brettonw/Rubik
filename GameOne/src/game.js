@@ -73,9 +73,9 @@ function initPage() {
         .attr("stroke-width", 1 / scale);
 
     var ship = Object.create (Ship);
-    ship.makeSvg (svg);
+    ship.makePolygonGeometry (svg);
     var ship2 = Object.create (Ship);
-    ship2.makeSvg (svg);
+    ship2.makeBallGeometry (svg);
     ship2.position = Vector2d.XY (-0.5, -0.5);
         
     var deltaTime = 1.0 / 20.0;
