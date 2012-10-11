@@ -1,0 +1,140 @@
+﻿body
+{
+    margin				: 0px 0px 0px 0px;
+}
+b
+{
+    background			: white;
+    color				: #0000cc;
+    font-family			: arial;
+    font-size			: 14px;
+    line-height			: 20px;
+    font-weight         : bold;
+}
+table
+{
+    background			: white;
+    color				: #0000cc;
+    font-family			: arial;
+    font-size			: 11px;
+    line-height			: 20px;
+}
+th
+{
+    vertical-align		: middle;
+}
+td
+{
+    vertical-align		: middle;
+}
+input
+{
+    font-family			: arial;
+    font-size			: 11px;
+    height				: 20px;
+    border-color		: #ccccee;
+    border-style		: solid;
+    border-width		: 1px;
+    color				: #0000cc;
+    text-align			: center;
+    width               : 60px;
+}
+input.text
+{
+    width				: 80px;
+}
+input[type=checkbox]
+{
+    border-style		: none;
+    height				: 20px;
+    width               : 20px;
+}
+select
+{
+    font-family			: arial;
+    font-size			: 11px;
+    border-color		: #ccccee;
+    border-style		: solid;
+    border-width		: 1px;
+    color				: #0000cc;
+    height				: 20px;
+    text-align			: center;
+    width				: 100px;
+}
+scrollbar
+{
+    border-color		: #ccccee;
+    border-style		: solid;
+    border-width		: 1px;
+}
+tt
+{
+    font-family			: lucida console;
+    font-size			: 10px;
+    line-height			: 14px;
+}
+.pending
+{
+    color				: #0000cc;
+}
+.cleared
+{
+    color				: #9999ee;
+}
+.void
+{
+    color				: #9999ee;
+    text-decoration		: line-through;
+}
+.escrow
+{
+    color				: #ee9999;
+}
+.error
+{
+    color				: #ff6666;
+}
+.menu_item 
+{
+    font-family			: arial;
+    font-size			: 11px;
+    width				: 136;
+    padding-left		: 20;
+    background-color	: #fff8f0;
+    color				: #4444ee;
+}
+.menu_background
+{
+    background-color	: #fff8f0;
+}
+.menu_highlight 
+{
+    font-family			: arial;
+    font-size			: 11px;
+    width				: 136;
+    padding-left		: 20;
+    background-color	: #eebbbb;
+    color				: #0000cc;
+}
+.menu_border 
+{
+    background-color	: #ccccee;
+}
+.context_menu
+{
+	position			: absolute;
+	visibility			: hidden;
+	background-color	: #fff8f0; 
+    border-color		: #ccccee;
+    border-style		: solid;
+    border-width		: 1px;
+}
+.popup_dialog
+{
+	position			: absolute;
+	visibility			: hidden;
+	background-color	: #fff8f0; 
+    border-color		: #ccccee;
+    border-style		: solid;
+    border-width		: 1px;
+}

@@ -1,0 +1,105 @@
+		<script language="javascript">
+			//--------------------------------------------------------------------------
+			var g_open_table = "<table border=0 cellpadding=0 cellspacing=0>";
+			var g_close_table = "</table>";
+			
+			//--------------------------------------------------------------------------
+			// table display functions for making pretty rows
+			//--------------------------------------------------------------------------
+			function Make_Box (width, height, padding, vpadding, contents)
+			{
+				// compute the size of the box interior
+				var myWidth = width - 2;
+				var myHeight = height - 2;
+
+				// create the html string
+				var	html = new String;
+
+				// build the table that encapsulates the box
+				html += '<table border=0 cellpadding=0 cellspacing=0 align=center width=' + width + 'height=' + height + '>';
+				html += '<tr>';
+				html += '	<td></td>';
+				html += '	<td><img src="/icons/dot_blue.gif" height=1 width=' + myWidth + '></td>';
+				html += '	<td></td>';
+				html += '</tr>';
+				html += '<tr>';
+				html += '	<td><img src="/icons/dot_blue.gif" height=' + myHeight + ' width=1></td>';
+				html += '	<td width=myWidth valign=center>';
+				html += '	    ' + g_open_table;
+				html += '		<tr><td width=1 height=' + vpadding + '></td></tr>';
+				html += '		<tr>';
+				html += '		<td height=1 width=' + padding + '></td>';
+				html += '		<td>' + contents + '</td>';
+				html += '		<td height=1 width=' + padding + '></td>';
+				html += '		</tr>';
+				html += '		</table>';
+				html += '	</td>';
+				html += '	<td><img src="/icons/dot_blue.gif" height=' + myHeight + ' width=1></td>';
+				html += '</tr>';
+				html += '<tr>';
+				html += '	<td></td>';
+				html += '	<td><img src="/icons/dot_blue.gif" height=1 width=' + myWidth + '></td>';
+				html += '	<td></td>';
+				html += '</tr>';
+				html += '</table>';
+				
+				// return the html string
+				return html;
+			}
+
+			//--------------------------------------------------------------------------
+			function Make_Table_Box (height, lwidth, content)
+			{
+				// create the html string
+				var	html = new String;
+
+				// build the table row for the box
+				html += '<tr><td>';
+				html += Make_Box (lwidth, height, 20, 0, content);
+				html += '</td></tr>';
+				html += '<tr><td height=3 width=3></td></tr>';
+				
+				// return the html string
+				return html;
+			}
+
+			//--------------------------------------------------------------------------
+			function Make_Table_Box_Pair (height, lwidth, left_content, rwidth, right_content)
+			{
+				// create the html string
+				var	html = new String;
+
+				// build the table row for the box
+				html += '<tr>';
+				html += '<td>' + Make_Box (lwidth, height, 10, 0, left_content) + '</td>';
+				html += '<td width=3></td>';
+				html += '<td>' + Make_Box (rwidth, height, 10, 0, right_content) + '</td>';
+				html += '</tr>';
+				html += '<tr><td height=3 width=3></td></tr>';
+				
+				// return the html string
+				return html;
+			}
+
+			//--------------------------------------------------------------------------
+			function Make_Table_Box_Triplet (height, lwidth, left_content, mwidth, middle_content, rwidth, right_content)
+			{
+				// create the html string
+				var	html = new String;
+
+				// build the table row for the box
+				html += '<tr>';
+				html += '<td>' + Make_Box (lwidth, height, 10, 0, left_content) + '</td>';
+				html += '<td width=3></td>';
+				html += '<td>' + Make_Box (mwidth, height, 10, 0, middle_content) + '</td>';
+				html += '<td width=3></td>';
+				html += '<td>' + Make_Box (rwidth, height, 10, 0, right_content) + '</td>';
+				html += '</tr>';
+				html += '<tr><td height=3 width=3></td></tr>';
+				
+				// return the html string
+				return html;
+			}
+
+			//--------------------------------------------------------------------------
+		</script>

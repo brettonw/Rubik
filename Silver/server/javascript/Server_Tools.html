@@ -1,0 +1,23 @@
+<script language="javascript" runat="server">
+	//--------------------------------------------------------------------------
+	// printing to the document
+	//--------------------------------------------------------------------------
+	function Print (string)
+	{
+		Response.Write (string);
+	}
+	
+	//--------------------------------------------------------------------------
+	// print a file
+	//--------------------------------------------------------------------------
+	function Print_File (filename)
+	{
+		var file = new ActiveXObject ("Scripting.FileSystemObject");
+		var stream = file.OpenTextFile (Server.MapPath (filename), 1);
+		while (! stream.AtEndOfStream)
+			Print (stream.ReadLine ());
+		stream.Close();
+	}
+
+	//--------------------------------------------------------------------------
+</script>

@@ -1,0 +1,57 @@
+<script language="javascript" runat="server">
+	//--------------------------------------------------------------------------
+	// return a name/value pair formatted as an XML string
+	//--------------------------------------------------------------------------
+	function XML_Format (name, value)
+	{
+		// replace spaces in the name with the underscore (_) character
+		var regexp = /(\s+)/g;
+		name = name.replace (regexp, "_");
+
+		// strip any trailing whitespace on the value
+		regexp = /(\s+$)/g;
+		value = value.replace (regexp, "");
+
+		// replace "null" values with empty strings ("")
+		regexp = /(^null$)/g;
+		value = value.replace (regexp, "");
+		
+		// if the value not empty, then return a complete XML tag,
+		// otherwise return a shortened XML tag
+		if (value.length > 0)
+			return "<" + name + ">" + value + "<\/" + name + ">";
+		else
+			return "<" + name + "/>";
+	}
+	
+	//--------------------------------------------------------------------------
+	// return a name/value pair formatted as an XML string
+	//--------------------------------------------------------------------------
+	function XML_Format_With_Attributes (name, attributes, value)
+	{
+		// replace spaces in the name with the underscore (_) character
+		var regexp = /(\s+)/g;
+		name = name.replace (regexp, "_");
+
+		// strip any trailing whitespace on the value
+		regexp = /(\s+$)/g;
+		value = value.replace (regexp, "");
+
+		// replace "null" values with empty strings ("")
+		regexp = /(^null$)/g;
+		value = value.replace (regexp, "");
+		
+		// if the attributes are non empty, we need to prepend a space to it
+		if (attributes.length > 0)
+		    attributes = " " + attributes;
+
+		// if the value not empty, then return a complete XML tag,
+		// otherwise return a shortened XML tag
+		if (value.length > 0)
+			return "<" + name + attributes + ">" + value + "<\/" + name + ">";
+		else
+			return "<" + name + "/>";
+	}
+	
+	//--------------------------------------------------------------------------
+</script>

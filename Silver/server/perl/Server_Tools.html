@@ -1,0 +1,21 @@
+<script language="PerlScript" runat="server">
+	############################################################################
+	# printing to the document
+	sub Print
+	{
+		my $string = shift;
+		$Response->Write ($string);
+	}
+	
+	############################################################################
+	# print a file
+	sub Print_File
+	{
+		my $filename = shift;
+		open (FILE, $Server->MapPath ($filename));
+		Print ($_) while (<FILE>);
+		close (FILE);
+	}
+
+	############################################################################
+</script>
