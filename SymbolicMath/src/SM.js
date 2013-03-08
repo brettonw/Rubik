@@ -7,7 +7,7 @@
 //                            hash of named values
 //  - function D(values)   -> returns a new expression that is the derivative of
 //                            this node
-//  - function Render()    -> turn the node into a string
+//  - function Render()    -> turn the node into a string of MathML elements
 //  - function Simplify()  -> returns a simplified node, may be called repeatedly
 //                            until the signature doesn't change
 
@@ -83,5 +83,5 @@ SM.namedConstants = {
     h                   : 6.62606957e-34,	        // Planck Constant - J s
     k                   : 1.3806488e-23,            // Boltzmann Constant - J K^-1
     c                   : 2.99792458e+08,           // speed of light - m s^-1
-    g                   : 9.80665                   // Earth standrd gravity - m s^-2
+    g                   : 9.80665                   // Earth standard gravity - m s^-2
 };

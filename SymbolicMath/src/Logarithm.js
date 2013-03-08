@@ -12,7 +12,7 @@ Exp.D = function(values) {
 
 Exp.Render = function(enclose) {
     //return "Exp (" + _X.Render(false) + ")";
-    return "e<sup>" + _X.Render(false) + "</sup>";
+    return "<msup><mi>e</mi>" + _X.Render(false) + "</msup>";
 };
 
 DERIVE_EXPR_ALIAS(Log,Function);

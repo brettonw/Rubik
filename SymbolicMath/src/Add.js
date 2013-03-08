@@ -30,14 +30,19 @@ Add.D = function(values) {
 };
 
 Add.Render = function(enclose) {
-    var result = new String();
-    if (enclose) result += "(";
+    var result = new String("<mrow>");
+    if (enclose) result += "<mo>(</mo>";
     result += this.children[0].Render(true);
-    for (var i = 1; i < this.children.length; ++i) {
-        result += " + " + this.children[i].Render(true);
+    if ((this.children.length == 2) AND (this.children[1].typename == "Constant") AND (this.children[1].constant < 0)) {
+        var constant = EXPR (Constant) (-this.children[1].constant);
+        result += "<mo>-</mo>" + constant.Render(true);
+    } else {
+        for (var i = 1; i < this.children.length; ++i) {
+            result += "<mo>+</mo>" + this.children[i].Render(true);
+        }
     }
-    if (enclose) result += ")";
-    return result;
+    if (enclose) result += "<mo>)</mo>";
+    return result + "</mrow>";
 };
 
 Add.Simplify = function() {

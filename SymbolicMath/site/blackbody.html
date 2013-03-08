@@ -1,44 +1,64 @@
-<!doctype html> 
+<!doctype html>
+
 <html>
 <head>
     <title>Symbolic Math - Blackbody</title>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=MML_HTMLorMML"></script>
     <script type="text/javascript" src="SymbolicMath.js"></script>
-    <script type="text/javascript" src="d3.v2.min.js"></script> 
+    <script type="text/javascript" src="d3.v3.js" charset="utf-8"></script>
 </head>
 <body onload="initPage();">
-<div id="display">display</div>
-<script type="text/javascript">
-    function initPage()
-    {
-        var display = new String();
-        display = "<table cellspacing='5'>";
-        display += "<tr><th>Equation</th></tr>\n";
+    <script type="text/javascript">
+        function initPage()
+        {
+            window.setMathRenderingMode("HTML-CSS");
 
-        //var L = (2 * h * c * c) / (wavelength^5 * (e^((h * c) / (&lambda; * k * T)) - 1))
-        var hc2 = SM.Multiply (2.0, "h", "c", "c");
-        var exp = SM.Multiply ("h", "c").Divide (SM.Multiply ("&lambda;", "k", "T"));
-        var L = (hc2.Divide (SM.Power ("&lambda;", 5).Multiply (SM.Exp (exp).Subtract (1)))).Multiply (1.0e-9);
-        L = L.Simplify ();
-        display += "<tr><td>" + L.toString () + "</td></tr>\n";
+            var display = new String();
+            display = "<table cellspacing='5'>";
+            display += "<tr><th>Equation</th></tr>\n<tr>";
 
-        display += "</table></br>\n";
+            //var L = (2 * h * c * c) / (wavelength^5 * (e^((h * c) / (wavelength * k * T)) - 1))
+            var hc2 = SM.Multiply (2.0, "h", "c", "c");
+            var exp = SM.Multiply("h", "c").Divide(SM.Multiply("&lambda;", "k", "T"));
+            var L = (hc2.Divide(SM.Power("&lambda;", 5).Multiply(SM.Exp(exp).Subtract(1)))).Multiply(1.0e-9);
+            /*
+            display += "<td>" + L.toString() + "</td>\n";
+            display += "<td> = </td>\n";
+            */
+            L = L.Simplify();
+            display += "<td>" + L.toString() + "</td>\n";
 
-        document.getElementById('display').innerHTML = display;
+            display += "</tr></table></br>\n";
 
-        // now evaluate the function
-        var sampler = new Sampler ();
-        sampler.values = {
-            T    : 5777              // Color Temperature - degrees K
-        };
-        sampler.domain = ["&lambda;", 220.0 * 1.0e-9, 1880 * 1.0e-9];
-        var graphData = sampler.Evaluate (L);
+            document.getElementById("display").innerHTML = display;
+            MathJax.Hub.Typeset();
 
-        var plot = new Plot ();
-        plot.title = "Blackbody Radiation at " + sampler.values.T + "ºK";
-        plot.xAxisTitle = "Wavelength (nm)";
-        plot.yAxisTitle = "Spectral Radiance (W / m² / sr / nm)";
-        plot.FromGraphData (graphData);
-    }
+
+            // now evaluate the function
+            var sampler = new Sampler ();
+            sampler.values = {
+                T    : 5777              // Color Temperature - degrees K
+            };
+            sampler.domain = ["&lambda;", 220.0 * 1.0e-9, 1880 * 1.0e-9];
+            var graphData = sampler.Evaluate (L);
+
+            var plot = new Plot ();
+            plot.title = "Blackbody Radiation at T=" + sampler.values.T + "ºK";
+            plot.xAxisTitle = "\u03BB = Wavelength (nm)";
+            plot.yAxisTitle = "Spectral Radiance (W / m² / sr / nm)";
+            plot.FromGraphData (graphData);
+        }
     
-</script> </body>
+        (function () {
+            //  When the renderer changes, ask the MathMenu to change
+            //  the renderer (this way we get any warning messages
+            window.setMathRenderingMode = function (renderer) {
+                MathJax.Hub.config.MathMenu.settings.renderer = renderer;
+                MathJax.Menu.Renderer.call(this);
+            };
+        })()
+    </script> 
+
+    <div id="display">display</div>
+</body>
 </html>

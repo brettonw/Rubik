@@ -49,7 +49,7 @@ Expr.Power      = function(a) { return EXPR(Power)(this, a); };
 
 Expr.toString = function() {
     // child objects must define "Render"
-    return this.Render (false);
+    return "<math xmlns=\"http://www.w3.org/1998/Math/MathML\">" + this.Render (false) + "</math>";
 };
 
 Expr.Simplify = function() {

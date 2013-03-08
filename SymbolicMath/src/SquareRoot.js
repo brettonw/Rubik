@@ -13,7 +13,7 @@ Sqrt.D = function(values) {
 };
 
 Sqrt.Render = function(enclose) {
-    return "Sqrt (" + _RADICAND.Render(false) + ")";
+    return "<msqrt>" + _RADICAND.Render(false) + "</msqrt>";
 };
 
 Sqrt.Simplify = function() {

@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>Symbolic Math - Test Page</title>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="SymbolicMath.js"></script>
 </head>
 <body onload="initPage();">
@@ -129,6 +130,7 @@
             var equation = SM.Divide (SM.Multiply (3.5, SM.Add (3.5, 5.1).Add(SM.Power ("x", 3.5))), 2.0).Simplify ();
             pass &= Test ("Complicated", equation, (3.5 * (3.5 + 5.1 + Math.pow (values.x, 3.5))) / 2.0);
         }
+        
         // test derivatives
         if (pass)
         {

@@ -40,16 +40,17 @@ Multiply.D = function(values) {
 };
 
 Multiply.Render = function(enclose) {
-    var result = new String();
+    var result = new String("<mrow>");
     //if (enclose) result += "(";
     result += this.children[0].Render(true);
     var count = this.children.length;
     for (var i = 1; i < count; ++i)
     {
-        result += " " + this.children[i].Render(true);
+        // invisible multiplication operator
+        result += "<mo>&#x2062;</mo>" + this.children[i].Render(true);
     }
     //if (enclose) result += ")";
-    return result;
+    return result + "</mrow>";
 };
 
 Multiply.Simplify = function() {

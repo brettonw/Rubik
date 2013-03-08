@@ -14,7 +14,7 @@ Variable.D = function(values) {
 };
 
 Variable.Render = function(enclose) {
-    return this.variable;
+    return "<mi>" + this.variable + "</mi>";
 };
 
 Variable._init = function() {

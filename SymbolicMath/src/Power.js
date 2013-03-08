@@ -18,7 +18,7 @@ Power.Render = function(enclose) {
     var result = new String();
     //if (enclose) result += "(";
     //result += _BASE.Render(true) + " ^ " + _EXPONENT.Render(true);
-    result += _BASE.Render(true) + "<sup>" + _EXPONENT.Render(true) + "</sup>";
+    result += "<msup>" + _BASE.Render(true) + " " + _EXPONENT.Render(true) + "</msup>";
     //if (enclose) result += ")";
     return result;
 };

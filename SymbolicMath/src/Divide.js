@@ -15,7 +15,7 @@ Divide.D = function(values) {
 Divide.Render = function(enclose) {
     var result = new String();
     //if (enclose) result += "(";
-    result += _NUMERATOR.Render(true) + " / " + _DENOMINATOR.Render(true);
+    result += "<mfrac>" + _NUMERATOR.Render(true) + " " + _DENOMINATOR.Render(true) + "</mfrac>";
     //if (enclose) result += ")";
     return result;
 };
