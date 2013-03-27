@@ -1,4 +1,5 @@
 DERIVE_EXPR(Constant);
+
 Constant.N = function(values) {
     return this.constant;
 };

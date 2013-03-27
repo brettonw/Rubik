@@ -2,6 +2,7 @@
 #define _EXPONENT   this.children[1]
 
 DERIVE_EXPR(Power);
+
 Power.N = function(values) {
     var base = _BASE.N(values);
     var exponent = _EXPONENT.N(values);

@@ -1,4 +1,5 @@
 var Expr = Object.create(null);
+
 Expr.MakeExpr = function(a) {
     var typeofa = typeof(a);
     if ((typeofa == "object") AND ("MakeExpr" in a)) {

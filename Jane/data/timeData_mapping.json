@@ -1,0 +1,15 @@
+{
+    "success"	: "success",
+    "metadata"	: {
+		"mapping"	: {
+			"TimeRecord"	: {
+				"DataArrayLocation" : "data",
+				"ID"				: { "mapFrom" : "Devices", "type":"O4.AlternateID", "index": true },
+				"Time Up"			: { "mapFrom" : "Date", "type":"O4.DateTime", "format":"MM-dd-yyyy hh:mm:ss aa" },
+				"Time Down"			: { "mapFrom" : "Date", "type":"O4.DateTime", "format":"MM-dd-yyyy hh:mm:ss aa" }
+			}
+		}
+    },
+    "root"		: {}
+}
+

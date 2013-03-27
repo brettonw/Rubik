@@ -1,0 +1,56 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Express 2012 for Web
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "site", "site", "{B5498E68-274A-42B5-899F-AFD72E5518A3}"
+	ProjectSection(SolutionItems) = preProject
+		site\index.html = site\index.html
+		site\Jane.js = site\Jane.js
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{16460EF7-79A2-4098-ACE7-C81D37766617}"
+	ProjectSection(SolutionItems) = preProject
+		src\Jane.js = src\Jane.js
+		src\JaneDataReference.js = src\JaneDataReference.js
+		src\JaneDataReferenceCopy.js = src\JaneDataReferenceCopy.js
+		src\macros.h = src\macros.h
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "css", "css", "{63E30A85-AB6E-4868-8DA4-865B4B18A593}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "js", "js", "{7A8AE71A-63F6-4D3E-B8CF-5CDD595D1AD3}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "js-lib", "js-lib", "{ECC0E979-B0BF-4E13-ADF8-624B556E8ECD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{06383A3E-5CCA-455D-8353-98E86CD1753E}"
+	ProjectSection(SolutionItems) = preProject
+		build.xml = build.xml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{0375D571-A968-475C-B12D-465001F3C769}"
+	ProjectSection(SolutionItems) = preProject
+		tools\ant.properties = tools\ant.properties
+		tools\common-build.xml = tools\common-build.xml
+		tools\unix.ant.properties = tools\unix.ant.properties
+		tools\windows.ant.properties = tools\windows.ant.properties
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{F8268939-3F96-4203-A6D7-D8D8A473CCA7}"
+	ProjectSection(SolutionItems) = preProject
+		build\Jane-concat.js = build\Jane-concat.js
+		build\Jane-preprocess.js = build\Jane-preprocess.js
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{63E30A85-AB6E-4868-8DA4-865B4B18A593} = {B5498E68-274A-42B5-899F-AFD72E5518A3}
+		{7A8AE71A-63F6-4D3E-B8CF-5CDD595D1AD3} = {B5498E68-274A-42B5-899F-AFD72E5518A3}
+		{ECC0E979-B0BF-4E13-ADF8-624B556E8ECD} = {B5498E68-274A-42B5-899F-AFD72E5518A3}
+		{B5498E68-274A-42B5-899F-AFD72E5518A3} = {06383A3E-5CCA-455D-8353-98E86CD1753E}
+		{16460EF7-79A2-4098-ACE7-C81D37766617} = {06383A3E-5CCA-455D-8353-98E86CD1753E}
+		{0375D571-A968-475C-B12D-465001F3C769} = {06383A3E-5CCA-455D-8353-98E86CD1753E}
+		{F8268939-3F96-4203-A6D7-D8D8A473CCA7} = {06383A3E-5CCA-455D-8353-98E86CD1753E}
+	EndGlobalSection
+EndGlobal

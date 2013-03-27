@@ -1,4 +1,5 @@
 DERIVE_EXPR(Multiply);
+
 Multiply.SortArray = function(array) {
     // we don't expect these arrays to get big, so bad sorting isn't a big deal
     var sortOrder = { Constant:1, Divide:2, Add:3, Variable:4, Power:5, Function:6, Multiply:7 };

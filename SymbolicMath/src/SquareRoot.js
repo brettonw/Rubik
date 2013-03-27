@@ -1,6 +1,7 @@
 #define _RADICAND       this.children[0]
 
 DERIVE_EXPR_ALIAS(Sqrt,Power);
+
 Sqrt.N = function(values) {
     var base = _RADICAND.N(values);
     var sqrt = Math.sqrt (base);

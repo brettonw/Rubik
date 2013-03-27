@@ -1,6 +1,7 @@
 #define _X  this.children[0]
 
 DERIVE_EXPR_ALIAS(Exp,Function);
+
 Exp.N = function(values) {
     return Math.exp (_X.N(values));
 };

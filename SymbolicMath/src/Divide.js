@@ -2,6 +2,7 @@
 #define _DENOMINATOR    this.children[1]
 
 DERIVE_EXPR(Divide);
+
 Divide.N = function(values) {
     return _NUMERATOR.N(values) / _DENOMINATOR.N(values);
 };

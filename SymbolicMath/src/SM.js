@@ -23,7 +23,8 @@
 // phase 7, Solve, Expand, etc.
 // phase ?, Multi-dimensional differentiation
 //------------------------------------------------------------------------------
-var SM = Object.create (null);
+var SM = Object.create(null);
+
 SM.Expr = function(a) {
     return Expr.MakeExpr(a);
 };
