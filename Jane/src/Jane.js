@@ -12,6 +12,17 @@
 //
 //------------------------------------------------------------------------------
 var Jane = Object.create (null);
-Jane.MakeDataRef = function (a) {
-    return JaneDataReference.MakeDataRef(a);
+
+Jane.events = {
+    DEFINE_AS(DATA_POPULATED),
+    DEFINE_AS(DATA_FLUSHED),
+    DEFINE_AS(DATA_CHANGED)
+    //DEFINE_AS(ROW_HIGHLIGHT_CHANGED),
+    //DEFINE_AS(HIGHLIGHT_CHANGED)
+};
+
+Jane.formats = {
+    DEFINE_AS(EMPTY),
+    DEFINE_AS(OBJECT),
+    DEFINE_AS(OBJECT_AS_PROTOTYPE)
 };

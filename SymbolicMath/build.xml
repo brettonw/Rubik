@@ -2,6 +2,11 @@
     <description> Build file for Symbolic Math JavaScript project </description>
     <property name="build-tools-dir" value="../BuildTools"/>
   	<import file="${build-tools-dir}/common-build.xml"/>
+  	
+    <property name="source-dir" value="src"/>
+    <property name="build-dir" value="build"/>
+    <property name="site-dir" value="site"/>
+
 
     <property name="concat-target" value="SymbolicMath-concat.js"/>
     <property name="preprocess-target" value="SymbolicMath-preprocess.js"/>

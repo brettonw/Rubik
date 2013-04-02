@@ -3,6 +3,10 @@
     <property name="build-tools-dir" value="../BuildTools"/>
   	<import file="${build-tools-dir}/common-build.xml"/>
 
+    <property name="source-dir" value="src"/>
+    <property name="build-dir" value="build"/>
+    <property name="site-dir" value="site"/>
+
     <property name="concat-target" value="GameOne-concat.js"/>
     <property name="preprocess-target" value="GameOne-preprocess.js"/>
     <property name="dev-target" value="GameOne-debug.js"/>

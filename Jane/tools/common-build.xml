@@ -1,19 +1,15 @@
-<project name="Common" default="rel" basedir=".">
-    <property name="source-dir" value="src"/>
-    <property name="build-dir" value="build"/>
-    <property name="site-dir" value="site"/>
+<project name="Common" default="debug" basedir=".">
+    <target name="debug" depends="debug-init, js-copy" description="Development build"/>
 
-    <target name="dev" depends="dev-init, js-copy" description="Development build"/>
-
-    <target name="dev-init">
-        <property name="final-target" value="${dev-target}"/>
+    <target name="debug-init">
+        <property name="final-target" value="${debug-target}"/>
         <property name="js-preprocess-switches" value="-DDEBUG"/>
     </target>
 
-    <target name="rel" depends="rel-init, js-minify" description="Release build"/>
+    <target name="release" depends="release-init, js-minify" description="Release build"/>
 
-    <target name="rel-init">
-        <property name="final-target" value="${rel-target}"/>
+    <target name="release-init">
+        <property name="final-target" value="${release-target}"/>
         <property name="js-preprocess-switches" value="-DRELEASE"/>
     </target>
 
@@ -76,7 +72,7 @@
 
     <target name="clean" description="Remove all artifacts of the build process" >
         <delete dir="${build-dir}"/>
-        <delete file="${site-dir}/${dev-target}"/>
-        <delete file="${site-dir}/${rel-target}"/>
+        <delete file="${site-dir}/${debug-target}"/>
+        <delete file="${site-dir}/${release-target}"/>
     </target>
 </project>

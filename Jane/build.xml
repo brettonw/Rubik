@@ -1,20 +1,27 @@
-<project name="Jane" default="rel" basedir=".">
-    <description> Build file for Symbolic Math JavaScript project </description>
-    <property name="build-tools-dir" value="tools"/>
-  	<import file="${build-tools-dir}/common-build.xml"/>
+<project name="Jane" default="debug" basedir=".">
+  <description> Build file for Symbolic Math JavaScript project </description>
+  <property name="build-tools-dir" value="tools"/>
+  <import file="${build-tools-dir}/common-build.xml"/>
+  
+  <property name="source-dir" value="src"/>
+  <property name="build-dir" value="build"/>
+  <property name="site-dir" value="site/js-lib"/>
 
-    <property name="concat-target" value="Jane-concat.js"/>
-    <property name="preprocess-target" value="Jane-preprocess.js"/>
-    <property name="dev-target" value="Jane-debug.js"/>
-    <property name="rel-target" value="Jane.js"/>
+  <property name="concat-target" value="Jane-concat.js"/>
+  <property name="preprocess-target" value="Jane-preprocess.js"/>
+  <property name="debug-target" value="Jane-debug.js"/>
+  <property name="release-target" value="Jane.js"/>
 
-    <target name="js-concatenate" depends="init">
-        <concat destfile="${build-dir}/${concat-target}">
-            <!-- file order is important, at least for the first two files -->
-            <fileset dir="${source-dir}" includes="macros.h" />
-            <fileset dir="${source-dir}" includes="JaneDataReference.js" />
-            <fileset dir="${source-dir}" includes="JaneDataReferenceCopy.js" />
-            <fileset dir="${source-dir}" includes="Jane.js" />
-        </concat>
-    </target>
+  <target name="js-concatenate" depends="init">
+    <concat destfile="${build-dir}/${concat-target}">
+      <!-- file order is important, at least for the first two files -->
+      <fileset dir="${source-dir}" includes="macros.h"/>
+      <fileset dir="${source-dir}" includes="Jane.js"/>
+      <fileset dir="${source-dir}" includes="DataReference.js"/>
+      <fileset dir="${source-dir}" includes="DataReferenceJson.js"/>
+      <fileset dir="${source-dir}" includes="DataReferenceCopy.js"/>
+      <fileset dir="${source-dir}" includes="DefaultFilter.js"/>
+      <fileset dir="${source-dir}" includes="DefaultTransform.js"/>
+    </concat>
+  </target>
 </project>
