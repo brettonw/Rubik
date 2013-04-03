@@ -47,8 +47,6 @@ Jane.DataReferenceCopy.CopyData = function (srcData, event) {
     var format = this.GetDataFormat();
     var readOnly = this.GetDataIsReadOnly();
 
-    var selectCount = (this.select === null) ? 0 : this.select.length;
-
     // loop over all the records
     var newData = [];
     for (var i = 0, count = data.length; i < count; ++i) {
@@ -67,7 +65,7 @@ Jane.DataReferenceCopy.CopyData = function (srcData, event) {
             } else {
                 // create a new object that contains the selected fields
                 var newRecord = {};
-                for (var j = 0; j < selectCount; ++j) {
+                for (var j = 0, selectCount =  this.select.length; j < selectCount; ++j) {
                     var fieldName = this.select[j];
                     newRecord[fieldName] = record[fieldName];
                 }

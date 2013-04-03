@@ -142,7 +142,6 @@ Jane.DataReferenceCopy.CopyData = function (srcData, event) {
     var data = srcData.data;
     var format = this.GetDataFormat();
     var readOnly = this.GetDataIsReadOnly();
-    var selectCount = (this.select === null) ? 0 : this.select.length;
     var newData = [];
     for (var i = 0, count = data.length; i < count; ++i) {
         var record = data[i];
@@ -154,7 +153,7 @@ Jane.DataReferenceCopy.CopyData = function (srcData, event) {
                 }
             } else {
                 var newRecord = {};
-                for (var j = 0; j < selectCount; ++j) {
+                for (var j = 0, selectCount = this.select.length; j < selectCount; ++j) {
                     var fieldName = this.select[j];
                     newRecord[fieldName] = record[fieldName];
                 }
@@ -190,7 +189,6 @@ Jane.DataReferenceCopy.CopyData = function (srcData, event) {
         };
         newData.sort (sortFunc);
     }
-    debugger;
     this.PopulateDataResponse({ data : newData }, readOnly, format, event);
 };
 Jane.DataReferenceCopy.ReceiveEvent = function (sender, event) {
