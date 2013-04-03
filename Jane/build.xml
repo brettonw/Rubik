@@ -20,8 +20,6 @@
       <fileset dir="${source-dir}" includes="DataReference.js"/>
       <fileset dir="${source-dir}" includes="DataReferenceJson.js"/>
       <fileset dir="${source-dir}" includes="DataReferenceCopy.js"/>
-      <fileset dir="${source-dir}" includes="DefaultFilter.js"/>
-      <fileset dir="${source-dir}" includes="DefaultTransform.js"/>
     </concat>
   </target>
 </project>

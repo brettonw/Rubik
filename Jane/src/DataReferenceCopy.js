@@ -1,45 +1,35 @@
 //------------------------------------------------------------------------------
 // A Jane Data Reference (JDR) Copy is an abstract, lightweight JDR that 
 // describes a data source as a filter, sort, and/or transformation of another 
-// JDR. This object is used to implement the filter plugin architecture.
-//
-// global interface
-//  + function: AddFilterPlugin (plugin, params)
-//  + function: AddTransformPlugin (plugin, params)
+// JDR. 
 //
 // object interface
-//  - function: SetTransform (name)
-//  - function: SetFilter (name, {params})
-//  - function: ClearFilters ()
-//  - function: SetSort ([fields])
+//  - property: select - an array of fields to select, an empty selection is
+//                       shorthand for all the fields
+//  - property: sort - an array of objects that contain a name and asc (boolean)
+//  - property: filter - an object that implements the filter plugin interface
+//  - property: transform - an object that implements the transform plugin interface
 //
-// global values
-//  + property: events
-//      - DATA_POPULATED
-//      - DATA_FLUSHED
-//      - DATA_CHANGED
-//
-// filter and transform plugins are javascript objects with several defined
-// interfaces:
-// object interface
+// filter and transform plugins are javascript objects with a defined interface:
 //  - property: name
-//  - function: HandleRecord (record, format, readOnly, params)
-//  - 
+//  - function: HandleRecord (record)
+//  
+// we assume that all record formats implement the bracket notation to retrieve 
+// fields within the record
+//
 //------------------------------------------------------------------------------
 
 Jane.DataReferenceCopy = Object.create(Jane.DataReference);
-
-Jane.DataReferenceCopy.filterPlugins = {};
-Jane.DataReferenceCopy.transformPlugins = {};
 
 Jane.DataReferenceCopy.Init = function (params) {
     // do the parental init, and then do my thing here
     SUPER.Init.call(this, params);
 
     // set up the default filter, transform, and sort options to be blank
-    this.filters = [];
-    this.sort = [];
-    this.transform = this.SetTransform ("default");
+    this.filter = null;
+    this.select = null;
+    this.transform = null;
+    this.sort = null;
 
     // one of the inputs should be the JDR this one is referencing, save it, and 
     // subscribe to events on it
@@ -49,44 +39,83 @@ Jane.DataReferenceCopy.Init = function (params) {
     return this;
 };
 
-Jane.DataReferenceCopy.FilterRecord = function (record) {
-    return true;
-};
+Jane.DataReferenceCopy.CopyData = function (srcData, event) {
+    // this is where we implement filtering, transformation, and sorting
+    // XXX TODO - implement a SQL-like language for the implementation
 
-Jane.DataReferenceCopy.TransformRecord = function (record) {
-    return record;
-};
-
-Jane.DataReferenceCopy.CopyData = function (data, event) {
-    // this is where we filter and sort the data, creating a lightweight copy
-    // if appropos. The filtering is performed using a plugin architecture that
-    // each record is passed through, and then the sort is applied.
-    var copiedData = [];
+    var data = srcData.data;
+    var format = this.GetDataFormat();
     var readOnly = this.GetDataIsReadOnly();
-    var format;
 
-    // if this "copy" is going to be read only, we will use the object stored
-    // in the source, otherwise we will create a lightweight copy
-    if (readOnly) {
-        format = data.format;
-        for (var i = 0, count = data.data.length; i < count; ++i) {
-            var record = data.data[i];
-            if (this.FilterRecord(record)) {
-                var transformedRecord = this.TransformRecord(record);
-                copiedData.push(transformedRecord);
+    var selectCount = (this.select === null) ? 0 : this.select.length;
+
+    // loop over all the records
+    var newData = [];
+    for (var i = 0, count = data.length; i < count; ++i) {
+        var record = data[i];
+        // filter
+        if ((this.filter === null) OR (this.filter.HandleRecord (record))) {
+            // select
+            if (this.select === null) {
+                // if the result is read only, we'll just keep the one we have
+                // as that will be the lightest weight solution
+                if (NOT readOnly) {
+                    // otherwise, we'll make it into an OBJECT_AS_PROTOTYPE
+                    record = Object.create (record);
+                    format = Jane.formats.OBJECT_AS_PROTOTYPE;
+                }
+            } else {
+                // create a new object that contains the selected fields
+                var newRecord = {};
+                for (var j = 0; j < selectCount; ++j) {
+                    var fieldName = this.select[j];
+                    newRecord[fieldName] = record[fieldName];
+                }
+                record = newRecord;
+                format = Jane.formats.OBJECT;
             }
-        }
-    } else {
-        format = this.formats.OBJECT_AS_PROTOTYPE;
-        for (var i = 0, count = data.data.length; i < count; ++i) {
-            copiedData.push(Object.create (data.data[i]));
+
+            // transform
+            if (this.transform !== null) {
+                record = this.transform.HandleRecord (record);
+                // XXX need to get the format from the transform somehow
+            }
+
+            // save it
+            newData.push(record);
         }
     }
 
-    // implement the sort, we assume that all record formats implement the 
-    // bracket notation to retrieve records
+    // sort
+    // XXX this might need to be more sophisticated if a sort field is not a
+    // XXX string or number (like... a date object)
+    if (this.sort !== null) {
+        var scope = this;
+        var sortCount = this.sort.length;
+        var sortFunc = function (a, b) {
+            var sortOrderLexical = function(a, b, asc) {
+                var na = Number(a);
+                var nb = Number(b);
+                if ((na == a.toString ()) && (nb == b.toString ())) {
+                    return asc ? (na - nb) : (nb - na);
+                }
+                return asc ? a.localeCompare (b) : b.localeCompare (a);
+            };
+            //debugger;
+            for (var i = 0, count = scope.sort.length; i < count; ++i) {
+                var sortField = scope.sort[i];
+                var sortResult = sortOrderLexical(a[sortField.name], b[sortField.name], sortField.asc);
+                if (sortResult != 0) {
+                    return sortResult;
+                }
+            }
 
-    this.PopulateDataResponse({ data : copiedData }, readOnly, format, event);
+            return 0;
+        };
+        newData.sort (sortFunc);
+    }                
+
+    this.PopulateDataResponse({ data : newData }, readOnly, format, event);
 };
 
 Jane.DataReferenceCopy.ReceiveEvent = function (sender, event) {
@@ -122,26 +151,4 @@ Jane.DataReferenceCopy.PopulateData = function () {
         this.populateRequested = true;
         this.source.Populate();
     }
-};
-
-Jane.DataReferenceCopy.InstallFilterPlugin = function (plugin) {
-    this.filterPlugins[plugin.name] = plugin;
-};
-
-Jane.DataReferenceCopy.InstallTransformPlugin = function (plugin) {
-    this.transformPlugins[plugin.name] = plugin;
-};
-
-Jane.DataReferenceCopy.SetTransform = function (name, params) {
-    //this.transform = 
-};
-
-Jane.DataReferenceCopy.AddFilter = function (name, params) {
-};
-
-Jane.DataReferenceCopy.ClearFilters = function () {
-    this.filters = [];
-};
-
-Jane.DataReferenceCopy.AddSort = function (field, asc) {
 };

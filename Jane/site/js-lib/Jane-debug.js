@@ -128,43 +128,70 @@ Jane.DataReferenceJson.PopulateData = function () {
     });
 };
 Jane.DataReferenceCopy = Object.create(Jane.DataReference);
-Jane.DataReferenceCopy.filterPlugins = {};
-Jane.DataReferenceCopy.transformPlugins = {};
 Jane.DataReferenceCopy.Init = function (params) {
     (Object.getPrototypeOf((Object.getPrototypeOf(this)))).Init.call(this, params);
-    this.filters = [];
-    this.sort = [];
-    this.transform = "none";
+    this.filter = null;
+    this.select = null;
+    this.transform = null;
+    this.sort = null;
     if ("source" in params) this["source"] = params["source"];
     this.source.SubscribeReadOnly (this, this.ReceiveEvent);
     return this;
 };
-Jane.DataReferenceCopy.FilterRecord = function (record) {
-    return true;
-};
-Jane.DataReferenceCopy.TransformRecord = function (record) {
-    return record;
-};
-Jane.DataReferenceCopy.CopyData = function (data, event) {
-    var copiedData = [];
+Jane.DataReferenceCopy.CopyData = function (srcData, event) {
+    var data = srcData.data;
+    var format = this.GetDataFormat();
     var readOnly = this.GetDataIsReadOnly();
-    var format;
-    if (readOnly) {
-        format = data.format;
-        for (var i = 0, count = data.data.length; i < count; ++i) {
-            var record = data.data[i];
-            if (this.FilterRecord(record)) {
-                var transformedRecord = this.TransformRecord(record);
-                copiedData.push(transformedRecord);
+    var selectCount = (this.select === null) ? 0 : this.select.length;
+    var newData = [];
+    for (var i = 0, count = data.length; i < count; ++i) {
+        var record = data[i];
+        if ((this.filter === null) || (this.filter.HandleRecord (record))) {
+            if (this.select === null) {
+                if (! readOnly) {
+                    record = Object.create (record);
+                    format = Jane.formats.OBJECT_AS_PROTOTYPE;
+                }
+            } else {
+                var newRecord = {};
+                for (var j = 0; j < selectCount; ++j) {
+                    var fieldName = this.select[j];
+                    newRecord[fieldName] = record[fieldName];
+                }
+                record = newRecord;
+                format = Jane.formats.OBJECT;
             }
-        }
-    } else {
-        format = this.formats.OBJECT_AS_PROTOTYPE;
-        for (var i = 0, count = data.data.length; i < count; ++i) {
-            copiedData.push(Object.create (data.data[i]));
+            if (this.transform !== null) {
+                record = this.transform.HandleRecord (record);
+            }
+            newData.push(record);
         }
     }
-    this.PopulateDataResponse({ data : copiedData }, readOnly, format, event);
+    if (this.sort !== null) {
+        var scope = this;
+        var sortCount = this.sort.length;
+        var sortFunc = function (a, b) {
+            var sortOrderLexical = function(a, b, asc) {
+                var na = Number(a);
+                var nb = Number(b);
+                if ((na == a.toString ()) && (nb == b.toString ())) {
+                    return asc ? (na - nb) : (nb - na);
+                }
+                return asc ? a.localeCompare (b) : b.localeCompare (a);
+            };
+            for (var i = 0, count = scope.sort.length; i < count; ++i) {
+                var sortField = scope.sort[i];
+                var sortResult = sortOrderLexical(a[sortField.name], b[sortField.name], sortField.asc);
+                if (sortResult != 0) {
+                    return sortResult;
+                }
+            }
+            return 0;
+        };
+        newData.sort (sortFunc);
+    }
+    debugger;
+    this.PopulateDataResponse({ data : newData }, readOnly, format, event);
 };
 Jane.DataReferenceCopy.ReceiveEvent = function (sender, event) {
     console.log (this.name + " receives " + event + " from " + sender.name);
@@ -198,28 +225,3 @@ Jane.DataReferenceCopy.PopulateData = function () {
         this.source.Populate();
     }
 };
-Jane.DataReferenceCopy.InstallFilterPlugin = function (plugin) {
-    this.filterPlugins[plugin.name] = plugin;
-};
-Jane.DataReferenceCopy.InstallTransformPlugin = function (plugin) {
-    this.transformPlugins[plugin.name] = plugin;
-};
-Jane.DataReferenceCopy.Transform = function (name, params) {
-};
-Jane.DefaultFilter = Object.create(null);
-Jane.DefaultFilter.name = "default";
-Jane.DefaultFilter.params = {};
-Jane.DefaultFilter.HandleRecord = function (record, params) {
-    return true;
-};
-Jane.DataReferenceCopy.InstallFilterPlugin(Jane.DefaultFilter, {});
-Jane.DefaultTransform = Object.create(null);
-Jane.DefaultTransform.name = "default";
-Jane.DefaultTransform.params = {};
-Jane.DefaultTransform.HandleRecord = function (record, format, readOnly, params) {
-    return (readOnly) ? record : Object.create(record);
-};
-Jane.DefaultTransform.GetTransformedFormat = function (format, readOnly, params) {
-    return (readOnly) ? format : Jane.formats.OBJECT_AS_PROTOTYPE;
-};
-Jane.DataReferenceCopy.InstallTransformPlugin(Jane.DefaultTransform);
