@@ -101,7 +101,7 @@ Jane.DataReferenceCopy.CopyData = function (srcData, event) {
                 }
                 return asc ? a.localeCompare (b) : b.localeCompare (a);
             };
-            //debugger;
+
             for (var i = 0, count = scope.sort.length; i < count; ++i) {
                 var sortField = scope.sort[i];
                 var sortResult = sortOrderLexical(a[sortField.name], b[sortField.name], sortField.asc);
