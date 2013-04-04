@@ -16,8 +16,13 @@
 //  - function: Flush ()
 //  - function: Refresh ()
 //
+//  - function: HasMetaData ()
+//  - function: GetMetaData ()
+//  - function: AddFieldMetaData (fieldName, displayName, type)
+//
 //  - property: name
-//  - property: metadata - implementation dependent
+//  - property: metaData - object with fieldName as keys, contains objects with
+//                         fieldName, displayName, and type
 //  - property: allowFlushForSubscription
 //
 // global interface
@@ -52,8 +57,9 @@ Jane.DataReference = Object.create(null);
 Jane.DataReference.allowFlushForSubscription = false;
 
 Jane.DataReference.Init = function(params) {
-    // start by creating an empty subscription list, and an empty data cache
+    // start by creating an empty subscription list, and empty metaData
     this.subscriptions = [];
+    this.metaData = {};
     
     // copy some parameters
     COPY_PARAM(name, params);
@@ -208,3 +214,20 @@ Jane.DataReference.Refresh = function () {
     this.Populate ();
 };
 
+Jane.DataReference.HasMetaData = function () {
+    return (Object.getOwnPropertyNames(this.metaData).length > 0);
+};
+
+Jane.DataReference.GetMetaData = function () {
+    return this.metaData;
+};
+
+Jane.DataReference.AddFieldMetaData = function (fieldName, displayName, type) {
+    // XXX right now all we care about is the columns with display name and type
+    // XXX we might care about tags or compound types later
+    this.metaData[fieldName] = {
+        "fieldName" : fieldName,
+        "displayName" : displayName,
+        "type" : type
+    };
+};

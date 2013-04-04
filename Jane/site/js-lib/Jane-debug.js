@@ -14,6 +14,7 @@ Jane.DataReference = Object.create(null);
 Jane.DataReference.allowFlushForSubscription = false;
 Jane.DataReference.Init = function(params) {
     this.subscriptions = [];
+    this.metaData = {};
     if ("name" in params) this["name"] = params["name"];
     if ("allowFlushForSubscription" in params) this["allowFlushForSubscription"] = params["allowFlushForSubscription"];
     return this;
@@ -115,17 +116,56 @@ Jane.DataReference.Refresh = function () {
     this.Flush ();
     this.Populate ();
 };
+Jane.DataReference.HasMetaData = function () {
+    return (Object.getOwnPropertyNames(this.metaData).length > 0);
+};
+Jane.DataReference.GetMetaData = function () {
+    return this.metaData;
+};
+Jane.DataReference.AddFieldMetaData = function (fieldName, displayName, type) {
+    this.metaData[fieldName] = {
+        "fieldName" : fieldName,
+        "displayName" : displayName,
+        "type" : type
+    };
+};
 Jane.DataReferenceJson = Object.create(Jane.DataReference);
 Jane.DataReferenceJson.Init = function (params) {
     (Object.getPrototypeOf((Object.getPrototypeOf(this)))).Init.call(this, params);
     if ("url" in params) this["url"] = params["url"];
+    if ("metaDataUrl" in params) this["metaDataUrl"] = params["metaDataUrl"];
+    this.PopulateMetaData();
     return this;
 };
+Jane.DataReferenceJson.PopulateMetaData = function () {
+    if (! this.HasMetaData()) {
+        var scope = this;
+        $.getJSON(this.metaDataUrl, function (metaData) {
+            scope.PopulateMetaDataResponse(metaData);
+        });
+    }
+};
+Jane.DataReferenceJson.PopulateMetaDataResponse = function (metaData) {
+    console.log (this.name + " populating metaData");
+    var fields = metaData.columns;
+    for (var i = 0, count = fields.length; i < count; ++i) {
+        var field = fields[i];
+        this.AddFieldMetaData(field.accessName, field.displayName, field.types[0]);
+    }
+    if ("populateRequested" in this) {
+        delete this.populateRequested;
+        this.PopulateData();
+    }
+};
 Jane.DataReferenceJson.PopulateData = function () {
-    var scope = this;
-    $.getJSON(this.url, function (data) {
-        scope.PopulateDataResponse(data, true, Jane.formats.OBJECT, Jane.events.DATA_POPULATED);
-    });
+    if (Object.getOwnPropertyNames(this.metaData).length > 0) {
+        var scope = this;
+        $.getJSON(this.url, function (data) {
+            scope.PopulateDataResponse(data, true, Jane.formats.OBJECT, Jane.events.DATA_POPULATED);
+        });
+    } else {
+        this.populateRequested = true;
+    }
 };
 Jane.DataReferenceCopy = Object.create(Jane.DataReference);
 Jane.DataReferenceCopy.Init = function (params) {
@@ -138,58 +178,97 @@ Jane.DataReferenceCopy.Init = function (params) {
     this.source.SubscribeReadOnly (this, this.ReceiveEvent);
     return this;
 };
-Jane.DataReferenceCopy.CopyData = function (srcData, event) {
-    var data = srcData.data;
-    var format = this.GetDataFormat();
-    var readOnly = this.GetDataIsReadOnly();
-    var newData = [];
-    for (var i = 0, count = data.length; i < count; ++i) {
-        var record = data[i];
-        if ((this.filter === null) || (this.filter.HandleRecord (record))) {
-            if (this.select === null) {
-                if (! readOnly) {
-                    record = Object.create (record);
-                    format = Jane.formats.OBJECT_AS_PROTOTYPE;
-                }
-            } else {
-                var newRecord = {};
-                for (var j = 0, selectCount = this.select.length; j < selectCount; ++j) {
-                    var fieldName = this.select[j];
-                    newRecord[fieldName] = record[fieldName];
-                }
-                record = newRecord;
-                format = Jane.formats.OBJECT;
-            }
-            if (this.transform !== null) {
-                record = this.transform.HandleRecord (record);
-            }
-            newData.push(record);
+Jane.DataReferenceCopy.Validate = function () {
+    debugger;
+    if (! this.HasMetaData ()) {
+        return false;
+    }
+    var metaData = this.GetMetaData ();
+    for (var i = 0, count = this.select.length; i < count; ++i) {
+        var fieldName = this.select[i];
+        if (! (fieldName in metaData)) {
+            console.log (this.name + " invalid selection field (" + fieldName + ")");
+            return false;
         }
     }
-    if (this.sort !== null) {
-        var scope = this;
-        var sortCount = this.sort.length;
-        var sortFunc = function (a, b) {
-            var sortOrderLexical = function(a, b, asc) {
-                var na = Number(a);
-                var nb = Number(b);
-                if ((na == a.toString ()) && (nb == b.toString ())) {
-                    return asc ? (na - nb) : (nb - na);
-                }
-                return asc ? a.localeCompare (b) : b.localeCompare (a);
-            };
-            for (var i = 0, count = scope.sort.length; i < count; ++i) {
-                var sortField = scope.sort[i];
-                var sortResult = sortOrderLexical(a[sortField.name], b[sortField.name], sortField.asc);
-                if (sortResult != 0) {
-                    return sortResult;
-                }
-            }
-            return 0;
-        };
-        newData.sort (sortFunc);
+    for (var i = 0, count = this.sort.length; i < count; ++i) {
+        var fieldName = this.sort[i].name;
+        if (! (fieldName in metaData)) {
+            console.log (this.name + " invalid sort field (" + fieldName + ")");
+            return false;
+        }
     }
-    this.PopulateDataResponse({ data : newData }, readOnly, format, event);
+    return true;
+};
+Jane.DataReferenceCopy.CopyData = function (srcData, event) {
+    if (this.Validate ()) {
+        var data = srcData.data;
+        var format = this.GetDataFormat();
+        var readOnly = this.GetDataIsReadOnly();
+        var newData = [];
+        for (var i = 0, count = data.length; i < count; ++i) {
+            var record = data[i];
+            if ((this.filter === null) || (this.filter.HandleRecord (record))) {
+                if (this.select === null) {
+                    if (! readOnly) {
+                        record = Object.create (record);
+                        format = Jane.formats.OBJECT_AS_PROTOTYPE;
+                    }
+                } else {
+                    var newRecord = {};
+                    for (var j = 0, selectCount = this.select.length; j < selectCount; ++j) {
+                        var fieldName = this.select[j];
+                        newRecord[fieldName] = record[fieldName];
+                    }
+                    record = newRecord;
+                    format = Jane.formats.OBJECT;
+                }
+                if (this.transform !== null) {
+                    record = this.transform.HandleRecord (record);
+                }
+                newData.push(record);
+            }
+        }
+        if (this.sort !== null) {
+            var scope = this;
+            var metaData = this.GetMetaData ();
+            var sortCount = this.sort.length;
+            var sortFunc = function (a, b) {
+                var sortOrderLexical = function(a, b, type, asc) {
+                    switch (type) {
+                        case "integer" :
+                        case "double" :
+                        case "string" : {
+                            var na = Number(a);
+                            var nb = Number(b);
+                            if ((na == a.toString ()) && (nb == b.toString ())) {
+                                return asc ? (na - nb) : (nb - na);
+                            }
+                            return asc ? a.localeCompare (b) : b.localeCompare (a);
+                        } break;
+                        case "temporal" : {
+                            var da = new Date(a).valueOf ();
+                            var db = new Date(b).valueOf ();
+                            return asc ? (da - db) : (db - da);
+                        } break;
+                    };
+                    return 0;
+                };
+                for (var i = 0, count = scope.sort.length; i < count; ++i) {
+                    var sortField = scope.sort[i];
+                    if (sortField.name in metaData) {
+                        var sortResult = sortOrderLexical(a[sortField.name], b[sortField.name], metaData[sortField.name].type, sortField.asc);
+                        if (sortResult != 0) {
+                            return sortResult;
+                        }
+                    }
+                }
+                return 0;
+            };
+            newData.sort (sortFunc);
+        }
+        this.PopulateDataResponse({ data : newData }, readOnly, format, event);
+    }
 };
 Jane.DataReferenceCopy.ReceiveEvent = function (sender, event) {
     console.log (this.name + " receives " + event + " from " + sender.name);
@@ -222,4 +301,10 @@ Jane.DataReferenceCopy.PopulateData = function () {
         this.populateRequested = true;
         this.source.Populate();
     }
+};
+Jane.DataReferenceCopy.HasMetaData = function () {
+    return ((Object.getPrototypeOf((Object.getPrototypeOf(this)))).HasMetaData.call (this)) ? true : this.source.HasMetaData ();
+};
+Jane.DataReferenceCopy.GetMetaData = function () {
+    return ((Object.getPrototypeOf((Object.getPrototypeOf(this)))).HasMetaData.call (this)) ? (Object.getPrototypeOf((Object.getPrototypeOf(this)))).GetMetaData.call (this) : this.source.GetMetaData ();
 };
