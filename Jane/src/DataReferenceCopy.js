@@ -6,9 +6,7 @@
 // object interface
 //  - property: select - an array of fields to select, an empty selection is
 //                       shorthand for all the fields
-//  - property: sort - an array of objects that contain a name, type, and asc 
-//                     (boolean) - type is one of "String", "Number", "Date"
-//                     XXX or it could eventually come from metadata
+//  - property: sort - an array of objects that contain a name, and asc (boolean)
 //  - property: filter - an object that implements the filter plugin interface
 //  - property: transform - an object that implements the transform plugin interface
 //
@@ -51,20 +49,24 @@ Jane.DataReferenceCopy.Validate = function () {
     var metaData = this.GetMetaData ();
 
     // check that the select fields are valid
-    for (var i = 0, count = this.select.length; i < count; ++i) {
-        var fieldName = this.select[i];
-        if (NOT (fieldName in metaData)) {
-            DEBUGLOG (this.name + " invalid selection field (" + fieldName + ")");
-            return false;
+    if (this.select != null) {
+        for (var i = 0, count = this.select.length; i < count; ++i) {
+            var fieldName = this.select[i];
+            if (NOT (fieldName in metaData.fields)) {
+                DEBUGLOG (this.name + " - invalid selection field (" + fieldName + ")");
+                return false;
+            }
         }
     }
 
     // check that the sort fields are valid
-    for (var i = 0, count = this.sort.length; i < count; ++i) {
-        var fieldName = this.sort[i].name;
-        if (NOT (fieldName in metaData)) {
-            DEBUGLOG (this.name + " invalid sort field (" + fieldName + ")");
-            return false;
+    if (this.sort != null) {
+        for (var i = 0, count = this.sort.length; i < count; ++i) {
+            var fieldName = this.sort[i].name;
+            if (NOT (fieldName in metaData.fields)) {
+                DEBUGLOG (this.name + " - invalid sort field (" + fieldName + ")");
+                return false;
+            }
         }
     }
 
@@ -72,22 +74,21 @@ Jane.DataReferenceCopy.Validate = function () {
     return true;
 };
 
-Jane.DataReferenceCopy.CopyData = function (srcData, event) {
+Jane.DataReferenceCopy.CopyData = function (rows, event) {
     // this is where we implement filtering, transformation, and sorting
     // XXX TODO - implement a SQL-like language for the implementation
     if (this.Validate ()) {
-        var data = srcData.data;
         var format = this.GetDataFormat();
         var readOnly = this.GetDataIsReadOnly();
 
         // loop over all the records
-        var newData = [];
-        for (var i = 0, count = data.length; i < count; ++i) {
-            var record = data[i];
+        var newRows = [];
+        for (var i = 0, count = rows.length; i < count; ++i) {
+            var record = rows[i];
             // filter
-            if ((this.filter === null) OR (this.filter.HandleRecord (record))) {
+            if ((this.filter == null) OR (this.filter.HandleRecord (record))) {
                 // select
-                if (this.select === null) {
+                if (this.select == null) {
                     // if the result is read only, we'll just keep the one we have
                     // as that will be the lightest weight solution
                     if (NOT readOnly) {
@@ -107,20 +108,20 @@ Jane.DataReferenceCopy.CopyData = function (srcData, event) {
                 }
 
                 // transform
-                if (this.transform !== null) {
+                if (this.transform != null) {
                     record = this.transform.HandleRecord (record);
-                    // XXX need to get the format from the transform somehow
+                    format = this.transform.GetFormat ();
                 }
 
                 // save it
-                newData.push(record);
+                newRows.push(record);
             }
         }
 
         // sort
         // XXX this might need to be more sophisticated if a sort field is not a
         // XXX string or number (like... a date object)
-        if (this.sort !== null) {
+        if (this.sort != null) {
             var scope = this;
             var metaData = this.GetMetaData ();
             var sortCount = this.sort.length;
@@ -149,19 +150,17 @@ Jane.DataReferenceCopy.CopyData = function (srcData, event) {
                 // loop over all of the sort fields, checking that they are valid first
                 for (var i = 0, count = scope.sort.length; i < count; ++i) {
                     var sortField = scope.sort[i];
-                    if (sortField.name in metaData) {
-                        var sortResult = sortOrderLexical(a[sortField.name], b[sortField.name], metaData[sortField.name].type, sortField.asc);
-                        if (sortResult != 0) {
-                            return sortResult;
-                        }
+                    var sortResult = sortOrderLexical(a[sortField.name], b[sortField.name], metaData.fields[sortField.name].type, sortField.asc);
+                    if (sortResult != 0) {
+                        return sortResult;
                     }
                 }
 
                 return 0;
             };
-            newData.sort (sortFunc);
+            newRows.sort (sortFunc);
         }                
-        this.PopulateDataResponse({ data : newData }, readOnly, format, event);
+        this.PopulateDataResponse(newRows, readOnly, format, event);
     }
 };
 

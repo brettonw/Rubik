@@ -13,8 +13,10 @@
 #define	SUPER				(Object.getPrototypeOf((Object.getPrototypeOf(this))))
 
 #ifdef DEBUG
+#define	DEBUGGER			debugger
 #define	DEBUGLOG(x)			console.log (x)
 #else
+#define	DEBUGGER
 #define	DEBUGLOG(x)			
 #endif
 

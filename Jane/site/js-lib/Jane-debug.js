@@ -1,22 +1,32 @@
 "use strict";
 var Jane = Object.create (null);
+Jane.constants = {
+    __IDENTIFIER__ : "__IDENTIFIER__",
+    __HIGHTLIGHTED__ : "__HIGHTLIGHTED__"
+};
 Jane.events = {
     DATA_POPULATED : "DATA_POPULATED",
     DATA_FLUSHED : "DATA_FLUSHED",
-    DATA_CHANGED : "DATA_CHANGED"
+    DATA_CHANGED : "DATA_CHANGED",
+    HIGHLIGHT_CHANGED : "HIGHLIGHT_CHANGED"
 };
 Jane.formats = {
     EMPTY : "EMPTY",
     OBJECT : "OBJECT",
     OBJECT_AS_PROTOTYPE : "OBJECT_AS_PROTOTYPE"
 };
+Jane.dataRefs = {};
 Jane.DataReference = Object.create(null);
 Jane.DataReference.allowFlushForSubscription = false;
 Jane.DataReference.Init = function(params) {
     this.subscriptions = [];
-    this.metaData = {};
+    this.metaData = {
+        "fields" : {},
+        "tags" : {}
+    };
     if ("name" in params) this["name"] = params["name"];
     if ("allowFlushForSubscription" in params) this["allowFlushForSubscription"] = params["allowFlushForSubscription"];
+    Jane.dataRefs[this.name] = this;
     return this;
 };
 Jane.DataReference.CanSubscribe = function (contract) {
@@ -81,7 +91,7 @@ Jane.DataReference.HasData = function () {
     return ("cachedData" in this);
 };
 Jane.DataReference.GetData = function () {
-    return (this.HasData ()) ? this.cachedData.data : null;
+    return (this.HasData ()) ? this.cachedData.rows : null;
 };
 Jane.DataReference.GetDataIsReadOnly = function() {
     if (this.HasData ()) { return this.cachedData.readOnly; }
@@ -97,8 +107,8 @@ Jane.DataReference.GetDataFormat = function() {
     if (this.HasData ()) { return this.cachedData.format; }
     return Jane.formats.EMPTY;
 };
-Jane.DataReference.PopulateDataResponse = function (data, readOnly, format, event) {
-    this.cachedData = { "data" : data, "readOnly" : readOnly, "format" : format };
+Jane.DataReference.PopulateDataResponse = function (rows, readOnly, format, event) {
+    this.cachedData = { "rows" : rows, "readOnly" : readOnly, "format" : format };
     this.PostEvent (event);
 };
 Jane.DataReference.PopulateData = function () {
@@ -117,17 +127,29 @@ Jane.DataReference.Refresh = function () {
     this.Populate ();
 };
 Jane.DataReference.HasMetaData = function () {
-    return (Object.getOwnPropertyNames(this.metaData).length > 0);
+    return (Object.getOwnPropertyNames(this.metaData.fields).length > 0);
 };
 Jane.DataReference.GetMetaData = function () {
     return this.metaData;
 };
-Jane.DataReference.AddFieldMetaData = function (fieldName, displayName, type) {
-    this.metaData[fieldName] = {
+Jane.DataReference.AddFieldMetaData = function (fieldName, displayName, type, tags) {
+    console.log (this.name + " adding metaData for " + fieldName + " as " + type);
+    var field = {
         "fieldName" : fieldName,
         "displayName" : displayName,
         "type" : type
     };
+    this.metaData.fields[fieldName] = field;
+    for (var i = 0, count = tags.length; i < count; ++i) {
+        var tag = tags[i];
+        console.log (this.name + " tagging " + fieldName + " (" + tag + ")");
+        if (! (tag in this.metaData.tags)) {
+            this.metaData.tags[tag] = [];
+        }
+        this.metaData.tags[tag].push (field);
+    }
+};
+Jane.DataReference.ValidateMetaData = function () {
 };
 Jane.DataReferenceJson = Object.create(Jane.DataReference);
 Jane.DataReferenceJson.Init = function (params) {
@@ -146,11 +168,11 @@ Jane.DataReferenceJson.PopulateMetaData = function () {
     }
 };
 Jane.DataReferenceJson.PopulateMetaDataResponse = function (metaData) {
-    console.log (this.name + " populating metaData");
+    console.log (this.name + " populate metaData");
     var fields = metaData.columns;
     for (var i = 0, count = fields.length; i < count; ++i) {
         var field = fields[i];
-        this.AddFieldMetaData(field.accessName, field.displayName, field.types[0]);
+        this.AddFieldMetaData(field.accessName, field.displayName, field.types[0], field.tags);
     }
     if ("populateRequested" in this) {
         delete this.populateRequested;
@@ -158,10 +180,10 @@ Jane.DataReferenceJson.PopulateMetaDataResponse = function (metaData) {
     }
 };
 Jane.DataReferenceJson.PopulateData = function () {
-    if (Object.getOwnPropertyNames(this.metaData).length > 0) {
+    if (this.HasMetaData ()) {
         var scope = this;
         $.getJSON(this.url, function (data) {
-            scope.PopulateDataResponse(data, true, Jane.formats.OBJECT, Jane.events.DATA_POPULATED);
+            scope.PopulateDataResponse(data.data, true, Jane.formats.OBJECT, Jane.events.DATA_POPULATED);
         });
     } else {
         this.populateRequested = true;
@@ -179,37 +201,39 @@ Jane.DataReferenceCopy.Init = function (params) {
     return this;
 };
 Jane.DataReferenceCopy.Validate = function () {
-    debugger;
     if (! this.HasMetaData ()) {
         return false;
     }
     var metaData = this.GetMetaData ();
-    for (var i = 0, count = this.select.length; i < count; ++i) {
-        var fieldName = this.select[i];
-        if (! (fieldName in metaData)) {
-            console.log (this.name + " invalid selection field (" + fieldName + ")");
-            return false;
+    if (this.select != null) {
+        for (var i = 0, count = this.select.length; i < count; ++i) {
+            var fieldName = this.select[i];
+            if (! (fieldName in metaData.fields)) {
+                console.log (this.name + " - invalid selection field (" + fieldName + ")");
+                return false;
+            }
         }
     }
-    for (var i = 0, count = this.sort.length; i < count; ++i) {
-        var fieldName = this.sort[i].name;
-        if (! (fieldName in metaData)) {
-            console.log (this.name + " invalid sort field (" + fieldName + ")");
-            return false;
+    if (this.sort != null) {
+        for (var i = 0, count = this.sort.length; i < count; ++i) {
+            var fieldName = this.sort[i].name;
+            if (! (fieldName in metaData.fields)) {
+                console.log (this.name + " - invalid sort field (" + fieldName + ")");
+                return false;
+            }
         }
     }
     return true;
 };
-Jane.DataReferenceCopy.CopyData = function (srcData, event) {
+Jane.DataReferenceCopy.CopyData = function (rows, event) {
     if (this.Validate ()) {
-        var data = srcData.data;
         var format = this.GetDataFormat();
         var readOnly = this.GetDataIsReadOnly();
-        var newData = [];
-        for (var i = 0, count = data.length; i < count; ++i) {
-            var record = data[i];
-            if ((this.filter === null) || (this.filter.HandleRecord (record))) {
-                if (this.select === null) {
+        var newRows = [];
+        for (var i = 0, count = rows.length; i < count; ++i) {
+            var record = rows[i];
+            if ((this.filter == null) || (this.filter.HandleRecord (record))) {
+                if (this.select == null) {
                     if (! readOnly) {
                         record = Object.create (record);
                         format = Jane.formats.OBJECT_AS_PROTOTYPE;
@@ -223,13 +247,14 @@ Jane.DataReferenceCopy.CopyData = function (srcData, event) {
                     record = newRecord;
                     format = Jane.formats.OBJECT;
                 }
-                if (this.transform !== null) {
+                if (this.transform != null) {
                     record = this.transform.HandleRecord (record);
+                    format = this.transform.GetFormat ();
                 }
-                newData.push(record);
+                newRows.push(record);
             }
         }
-        if (this.sort !== null) {
+        if (this.sort != null) {
             var scope = this;
             var metaData = this.GetMetaData ();
             var sortCount = this.sort.length;
@@ -256,18 +281,16 @@ Jane.DataReferenceCopy.CopyData = function (srcData, event) {
                 };
                 for (var i = 0, count = scope.sort.length; i < count; ++i) {
                     var sortField = scope.sort[i];
-                    if (sortField.name in metaData) {
-                        var sortResult = sortOrderLexical(a[sortField.name], b[sortField.name], metaData[sortField.name].type, sortField.asc);
-                        if (sortResult != 0) {
-                            return sortResult;
-                        }
+                    var sortResult = sortOrderLexical(a[sortField.name], b[sortField.name], metaData.fields[sortField.name].type, sortField.asc);
+                    if (sortResult != 0) {
+                        return sortResult;
                     }
                 }
                 return 0;
             };
-            newData.sort (sortFunc);
+            newRows.sort (sortFunc);
         }
-        this.PopulateDataResponse({ data : newData }, readOnly, format, event);
+        this.PopulateDataResponse(newRows, readOnly, format, event);
     }
 };
 Jane.DataReferenceCopy.ReceiveEvent = function (sender, event) {
@@ -307,4 +330,27 @@ Jane.DataReferenceCopy.HasMetaData = function () {
 };
 Jane.DataReferenceCopy.GetMetaData = function () {
     return ((Object.getPrototypeOf((Object.getPrototypeOf(this)))).HasMetaData.call (this)) ? (Object.getPrototypeOf((Object.getPrototypeOf(this)))).GetMetaData.call (this) : this.source.GetMetaData ();
+};
+Jane.TransformFlatten = Object.create(null);
+Jane.TransformFlatten.name = "Flatten";
+Jane.TransformFlatten.EnumerateRecord = function (record, into) {
+    for (var key in record) {
+        if (record.hasOwnProperty(key)) {
+            var value = record[key];
+            var valueType = typeof (value);
+            if (valueType == "object") {
+                EnumerateRecord(value, into);
+            } else {
+                into[key] = value;
+            }
+        }
+    }
+};
+Jane.TransformFlatten.HandleRecord = function (record) {
+    var into = Object.create(null);
+    this.EnumerateRecord(record, into);
+    return into;
+};
+Jane.TransformFlatten.GetFormat = function () {
+    return Jane.formats.OBJECT;
 };

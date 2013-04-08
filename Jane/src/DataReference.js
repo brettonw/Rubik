@@ -59,12 +59,17 @@ Jane.DataReference.allowFlushForSubscription = false;
 Jane.DataReference.Init = function(params) {
     // start by creating an empty subscription list, and empty metaData
     this.subscriptions = [];
-    this.metaData = {};
+    this.metaData = {
+        "fields" : {},
+        "tags" : {}
+    };
     
     // copy some parameters
     COPY_PARAM(name, params);
     COPY_PARAM(allowFlushForSubscription, params);
 
+    // store this object in the global ref
+    Jane.dataRefs[this.name] = this;
     return this;
 };
 
@@ -158,7 +163,7 @@ Jane.DataReference.HasData = function () {
 };
 
 Jane.DataReference.GetData = function () {
-    return (this.HasData ()) ? this.cachedData.data : null;
+    return (this.HasData ()) ? this.cachedData.rows : null;
 };
 
 Jane.DataReference.GetDataIsReadOnly = function() {
@@ -186,10 +191,10 @@ Jane.DataReference.GetDataFormat = function() {
     return Jane.formats.EMPTY;
 };
 
-Jane.DataReference.PopulateDataResponse = function (data, readOnly, format, event) {
+Jane.DataReference.PopulateDataResponse = function (rows, readOnly, format, event) {
     // whatever mechanism populates the data is descendant classes, it should
     // call this method. 
-    this.cachedData = { "data" : data, "readOnly" : readOnly, "format" : format };
+    this.cachedData = { "rows" : rows, "readOnly" : readOnly, "format" : format };
     this.PostEvent (event);
 };
 
@@ -215,19 +220,35 @@ Jane.DataReference.Refresh = function () {
 };
 
 Jane.DataReference.HasMetaData = function () {
-    return (Object.getOwnPropertyNames(this.metaData).length > 0);
+    return (Object.getOwnPropertyNames(this.metaData.fields).length > 0);
 };
 
 Jane.DataReference.GetMetaData = function () {
     return this.metaData;
 };
 
-Jane.DataReference.AddFieldMetaData = function (fieldName, displayName, type) {
-    // XXX right now all we care about is the columns with display name and type
-    // XXX we might care about tags or compound types later
-    this.metaData[fieldName] = {
+Jane.DataReference.AddFieldMetaData = function (fieldName, displayName, type, tags) {
+    DEBUGLOG (this.name + " adding metaData for " + fieldName + " as " + type);
+    var field = {
         "fieldName" : fieldName,
         "displayName" : displayName,
         "type" : type
     };
+    this.metaData.fields[fieldName] = field;
+
+    // tags is an array of values, we store the tags as their own keys, with 
+    // references to the fields they are associated with
+    for (var i = 0, count = tags.length; i < count; ++i) {
+        var tag = tags[i];
+        DEBUGLOG (this.name + " tagging " + fieldName + " (" + tag + ")");
+        if (NOT (tag in this.metaData.tags)) {
+            this.metaData.tags[tag] = [];
+        }
+        this.metaData.tags[tag].push (field);
+    }
+};
+
+Jane.DataReference.ValidateMetaData = function () {
+    // need a primary key...
+
 };

@@ -13,12 +13,16 @@
 //------------------------------------------------------------------------------
 var Jane = Object.create (null);
 
+Jane.constants = {
+    DEFINE_AS(__IDENTIFIER__),
+    DEFINE_AS(__HIGHTLIGHTED__)
+};
+
 Jane.events = {
     DEFINE_AS(DATA_POPULATED),
     DEFINE_AS(DATA_FLUSHED),
-    DEFINE_AS(DATA_CHANGED)
-    //DEFINE_AS(ROW_HIGHLIGHT_CHANGED),
-    //DEFINE_AS(HIGHLIGHT_CHANGED)
+    DEFINE_AS(DATA_CHANGED),
+    DEFINE_AS(HIGHLIGHT_CHANGED)
 };
 
 Jane.formats = {
@@ -26,3 +30,5 @@ Jane.formats = {
     DEFINE_AS(OBJECT),
     DEFINE_AS(OBJECT_AS_PROTOTYPE)
 };
+
+Jane.dataRefs = {};

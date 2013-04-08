@@ -3,7 +3,7 @@
     "intervalColumns": [],
     "timeStampColumns": [],
     "columns": [
-        { "types": ["string"], "displayName": "Card Holder", "accessName": "CardHolder", "tags": [] },
+        { "types": ["string"], "displayName": "Card Holder", "accessName": "CardHolder", "tags": ["name"] },
         { "types": ["integer"], "displayName": "Card Number", "accessName": "CardNo", "tags": [] },
         { "types": ["string"], "displayName": "Computer, Port, Panel", "accessName": "Computer, Port, Panel", "tags": [] },
         { "types": ["temporal"], "displayName": "Date", "accessName": "Date", "tags": [] },
