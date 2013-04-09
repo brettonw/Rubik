@@ -11,7 +11,7 @@
 // other in use.
 //
 //------------------------------------------------------------------------------
-var Jane = Object.create (EventSource);
+var Jane = Object.create (EventSource).Init ({ "name" : "Jane" });
 
 Jane.constants = {
     DEFINE_AS(__IDENTIFIER__),
@@ -19,6 +19,8 @@ Jane.constants = {
 };
 
 Jane.events = {
+    DEFINE_AS(DATA_REFERENCE_ADDED),
+
     DEFINE_AS(DATA_POPULATED),
     DEFINE_AS(DATA_FLUSHED),
     DEFINE_AS(DATA_CHANGED),
@@ -32,3 +34,8 @@ Jane.formats = {
 };
 
 Jane.dataRefs = {};
+
+Jane.AddDataReference = function (dataRef) {
+    this.dataRefs [dataRef.name] = dataRef;
+    this.PostEvent (Jane.events.DATA_REFERENCE_ADDED);
+};

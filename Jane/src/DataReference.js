@@ -70,7 +70,7 @@ Jane.DataReference.Init = function(params) {
     COPY_PARAM(allowFlushForSubscription, params);
 
     // store this object in the global ref
-    Jane.dataRefs[this.name] = this;
+    Jane.AddDataReference (this);
     return this;
 };
 

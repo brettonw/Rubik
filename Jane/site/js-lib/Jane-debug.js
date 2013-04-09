@@ -27,12 +27,13 @@ EventSource.PostEvent = function (event) {
         subscription.receiver.apply(subscription.target, [this, event]);
     }
 };
-var Jane = Object.create (EventSource);
+var Jane = Object.create (EventSource).Init ({ "name" : "Jane" });
 Jane.constants = {
     __IDENTIFIER__ : "__IDENTIFIER__",
     __HIGHTLIGHTED__ : "__HIGHTLIGHTED__"
 };
 Jane.events = {
+    DATA_REFERENCE_ADDED : "DATA_REFERENCE_ADDED",
     DATA_POPULATED : "DATA_POPULATED",
     DATA_FLUSHED : "DATA_FLUSHED",
     DATA_CHANGED : "DATA_CHANGED",
@@ -44,6 +45,10 @@ Jane.formats = {
     OBJECT_AS_PROTOTYPE : "OBJECT_AS_PROTOTYPE"
 };
 Jane.dataRefs = {};
+Jane.AddDataReference = function (dataRef) {
+    this.dataRefs [dataRef.name] = dataRef;
+    this.PostEvent (Jane.events.DATA_REFERENCE_ADDED);
+};
 Jane.DataReference = Object.create(EventSource);
 Jane.DataReference.allowFlushForSubscription = false;
 Jane.DataReference.Init = function(params) {
@@ -53,7 +58,7 @@ Jane.DataReference.Init = function(params) {
         "tags" : {}
     };
     if ("allowFlushForSubscription" in params) this["allowFlushForSubscription"] = params["allowFlushForSubscription"];
-    Jane.dataRefs[this.name] = this;
+    Jane.AddDataReference (this);
     return this;
 };
 Jane.DataReference.CanSubscribe = function (contract) {
@@ -159,17 +164,20 @@ Jane.DataReference.AddFieldMetaData = function (fieldName, displayName, type, ta
 Jane.DataReference.ValidateMetaData = function () {
 };
 Jane.DataReferenceEspace = Object.create(Jane.DataReference);
-Jane.DataReferenceEspace.Init = function (params) {
-    Jane.DataReference.Init.call(this, params);
-    if ("url" in params) this["url"] = params["url"];
-    if ("metaDataUrl" in params) this["metaDataUrl"] = params["metaDataUrl"];
+Jane.DataReferenceEspace.Init = function (resultSet) {
+    Jane.DataReference.Init.call(this, { "name" : resultSet.resultSetName });
+    if ("resultSetUrl" in resultSet) this["dataUrl"] = resultSet["resultSetUrl"];
+    if ("cdmMapUrl" in resultSet) this["metaDataUrl"] = resultSet["cdmMapUrl"];
+    if ("numRows" in resultSet) this["rowCount"] = resultSet["numRows"];
     this.PopulateMetaData();
     return this;
 };
 Jane.DataReferenceEspace.PopulateMetaData = function () {
     if (! this.HasMetaData()) {
+        var dataUri = parseUri (this.dataUrl);
+        var metaDataUrl = dataUri.protocol + "://" + dataUri.authority + this.metaDataUrl;
         var scope = this;
-        $.getJSON(this.metaDataUrl, function (metaData) {
+        $.getJSON(metaDataUrl, function (metaData) {
             scope.PopulateMetaDataResponse(metaData);
         });
     }
@@ -189,7 +197,7 @@ Jane.DataReferenceEspace.PopulateMetaDataResponse = function (metaData) {
 Jane.DataReferenceEspace.PopulateData = function () {
     if (this.HasMetaData ()) {
         var scope = this;
-        $.getJSON(this.url, function (data) {
+        $.getJSON(this.dataUrl, function (data) {
             scope.PopulateDataResponse(data.rows, true, Jane.formats.OBJECT, Jane.events.DATA_POPULATED);
         });
     } else {

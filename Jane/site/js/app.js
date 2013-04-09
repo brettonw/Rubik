@@ -6,12 +6,14 @@ function StartApp() {
     testLogger.ReceiveEvent = function (sender, event) {
         console.log(this.name + " receives " + event + " from " + sender.name);
     };
+    Jane.Subscribe(testLogger, testLogger.ReceiveEvent);
 
     // create the source data reference
     var jsonJdr = Object.create(Jane.DataReferenceEspace).Init({
-        name: "Json JDR",
-        url: "data/timeData.json",
-        metaDataUrl: "data/timeData-metaData.json"
+        "resultSetName" : "Espace Time Data",
+        "numRows" :82,
+        "resultSetUrl" : "https://localhost:8443/bwade/JavaScript/Jane/site/data/timeData.json",
+        "cdmMapUrl" : "/bwade/JavaScript/Jane/site/data/timeData-metaData.json"
     });
     jsonJdr.SubscribeReadOnly(testLogger, testLogger.ReceiveEvent);
 
@@ -39,5 +41,5 @@ function StartApp() {
         { name: "CardHolder", asc: false },
         { name: "Date", asc: true }
     ];
-    copyJdr2.Subscribe(testLogger, testLogger.ReceiveEvent, { "X": "X" });
+    copyJdr2.Subscribe(testLogger, testLogger.ReceiveEvent, { "X" : "X" });
 }
