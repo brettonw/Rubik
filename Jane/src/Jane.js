@@ -11,7 +11,7 @@
 // other in use.
 //
 //------------------------------------------------------------------------------
-var Jane = Object.create (null);
+var Jane = Object.create (EventSource);
 
 Jane.constants = {
     DEFINE_AS(__IDENTIFIER__),

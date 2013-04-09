@@ -8,7 +8,7 @@ function StartApp() {
     };
 
     // create the source data reference
-    var jsonJdr = Object.create(Jane.DataReferenceJson).Init({
+    var jsonJdr = Object.create(Jane.DataReferenceEspace).Init({
         name: "Json JDR",
         url: "data/timeData.json",
         metaDataUrl: "data/timeData-metaData.json"

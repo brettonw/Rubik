@@ -52,20 +52,21 @@
 //  
 //------------------------------------------------------------------------------
 
-Jane.DataReference = Object.create(null);
+Jane.DataReference = Object.create(EventSource);
 
 Jane.DataReference.allowFlushForSubscription = false;
 
 Jane.DataReference.Init = function(params) {
-    // start by creating an empty subscription list, and empty metaData
-    this.subscriptions = [];
+    // do the parental init, and then do my thing here
+    EventSource.Init.call(this, params);
+
+    // start by creating empty metaData
     this.metaData = {
         "fields" : {},
         "tags" : {}
     };
     
     // copy some parameters
-    COPY_PARAM(name, params);
     COPY_PARAM(allowFlushForSubscription, params);
 
     // store this object in the global ref
@@ -111,51 +112,23 @@ Jane.DataReference.CanSubscribe = function (contract) {
 
 Jane.DataReference.Subscribe = function(target, receiver, contract) {
     if (this.CanSubscribe (contract)) {
-        // check if the target is already subscribed, if so - bail out
-        for (var i = 0, count = this.subscriptions.length; i < count; ++i) {
-            var subscription = this.subscriptions[i];
-            if (target == subscription.target) {
-                return false;
+        var subscription = EventSource.Subscribe.call (this, target, receiver);
+        if (subscription != null) {
+            subscription["contract"] = contract;
+
+            // if the data is already populated, send a populate event to this
+            // receiver so it can join in the fun
+            if (this.HasData ()) {
+                receiver.apply (target, [Jane.events.DATA_POPULATED, this.cachedData]);
             }
         }
-
-        // add the subscription
-        DEBUGLOG (target.name + " subscribes to " + this.name);
-        this.subscriptions.push ({ "target" : target, "receiver" : receiver, "contract" : contract});
-
-        // if the data is already populated, send a populate event to this
-        // receiver so it can join in the fun
-        if (this.HasData ()) {
-            receiver.apply (target, [Jane.events.DATA_POPULATED, this.cachedData]);
-        }
-
-        // report the success
-        return true;
+        return subscription;
     }
-    return false;
+    return null;
 };
 
 Jane.DataReference.SubscribeReadOnly = function(target, receiver) {
     return this.Subscribe (target, receiver, {});
-};
-
-Jane.DataReference.Unsubscribe = function(target) {
-    // the subscriptions array is examined to remove the target
-    for (var i = 0, count = this.subscriptions.length; i < count; ++i) {
-        var subscription = this.subscriptions[i];
-        if (target == subscription.target) {
-            this.subscriptions.splice (i, 1);
-            return;
-        }
-    }
-};
-
-Jane.DataReference.PostEvent = function (event) {
-    for (var i = 0, count = this.subscriptions.length; i < count; ++i) {
-        var subscription = this.subscriptions[i];
-        DEBUGLOG (this.name + " posting " + event + " to " + subscription.target.name);
-        subscription.receiver.apply (subscription.target, [this, event]);
-    }
 };
 
 Jane.DataReference.HasData = function () {

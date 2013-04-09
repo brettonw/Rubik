@@ -23,7 +23,7 @@ Jane.DataReferenceCopy = Object.create(Jane.DataReference);
 
 Jane.DataReferenceCopy.Init = function (params) {
     // do the parental init, and then do my thing here
-    SUPER.Init.call(this, params);
+    Jane.DataReference.Init.call(this, params);
 
     // set up the default filter, transform, and sort options to be blank
     this.filter = null;
@@ -76,7 +76,7 @@ Jane.DataReferenceCopy.Validate = function () {
 
 Jane.DataReferenceCopy.CopyData = function (rows, event) {
     // this is where we implement filtering, transformation, and sorting
-    // XXX TODO - implement a SQL-like language for the implementation
+    // XXX TODO - implement a SQL-like language for the implementation?
     if (this.Validate ()) {
         var format = this.GetDataFormat();
         var readOnly = this.GetDataIsReadOnly();
@@ -200,10 +200,10 @@ Jane.DataReferenceCopy.PopulateData = function () {
 };
 
 Jane.DataReferenceCopy.HasMetaData = function () {
-    return  (SUPER.HasMetaData.call (this)) ? true : this.source.HasMetaData ();
+    return  (Jane.DataReference.HasMetaData.call (this)) ? true : this.source.HasMetaData ();
 };
 
 Jane.DataReferenceCopy.GetMetaData = function () {
-    return  (SUPER.HasMetaData.call (this)) ? SUPER.GetMetaData.call (this) : this.source.GetMetaData ();
+    return  (Jane.DataReference.HasMetaData.call (this)) ? Jane.DataReference.GetMetaData.call (this) : this.source.GetMetaData ();
 };
 

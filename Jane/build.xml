@@ -16,9 +16,10 @@
     <concat destfile="${build-dir}/${concat-target}">
       <!-- file order is important, at least for the first two files -->
       <fileset dir="${source-dir}" includes="macros.h"/>
+      <fileset dir="${source-dir}" includes="EventSource.js"/>
       <fileset dir="${source-dir}" includes="Jane.js"/>
       <fileset dir="${source-dir}" includes="DataReference.js"/>
-      <fileset dir="${source-dir}" includes="DataReferenceJson.js"/>
+      <fileset dir="${source-dir}" includes="DataReferenceEspace.js"/>
       <fileset dir="${source-dir}" includes="DataReferenceCopy.js"/>
       <fileset dir="${source-dir}" includes="TransformFlatten.js"/>
     </concat>

@@ -1,5 +1,33 @@
 "use strict";
-var Jane = Object.create (null);
+var EventSource = Object.create(null);
+EventSource.Init = function (params) {
+    this.subscriptions = [];
+    if ("name" in params) this["name"] = params["name"];
+    return this;
+};
+EventSource.Subscribe = function (target, receiver) {
+    if (this.subscriptions.indexOf(target) >= 0) {
+        return null;
+    }
+    console.log (target.name + " subscribes to " + this.name);
+    var subscription = { "target": target, "receiver": receiver };
+    this.subscriptions.push(subscription);
+    return subscription;
+};
+EventSource.Unsubscribe = function (target) {
+    var i = this.subscriptions.indexOf(target);
+    if (i >= 0) {
+        this.subscriptions.splice(i, 1);
+    }
+};
+EventSource.PostEvent = function (event) {
+    for (var i = 0, count = this.subscriptions.length; i < count; ++i) {
+        var subscription = this.subscriptions[i];
+        console.log (this.name + " posting " + event + " to " + subscription.target.name);
+        subscription.receiver.apply(subscription.target, [this, event]);
+    }
+};
+var Jane = Object.create (EventSource);
 Jane.constants = {
     __IDENTIFIER__ : "__IDENTIFIER__",
     __HIGHTLIGHTED__ : "__HIGHTLIGHTED__"
@@ -16,15 +44,14 @@ Jane.formats = {
     OBJECT_AS_PROTOTYPE : "OBJECT_AS_PROTOTYPE"
 };
 Jane.dataRefs = {};
-Jane.DataReference = Object.create(null);
+Jane.DataReference = Object.create(EventSource);
 Jane.DataReference.allowFlushForSubscription = false;
 Jane.DataReference.Init = function(params) {
-    this.subscriptions = [];
+    EventSource.Init.call(this, params);
     this.metaData = {
         "fields" : {},
         "tags" : {}
     };
-    if ("name" in params) this["name"] = params["name"];
     if ("allowFlushForSubscription" in params) this["allowFlushForSubscription"] = params["allowFlushForSubscription"];
     Jane.dataRefs[this.name] = this;
     return this;
@@ -53,39 +80,19 @@ Jane.DataReference.CanSubscribe = function (contract) {
 };
 Jane.DataReference.Subscribe = function(target, receiver, contract) {
     if (this.CanSubscribe (contract)) {
-        for (var i = 0, count = this.subscriptions.length; i < count; ++i) {
-            var subscription = this.subscriptions[i];
-            if (target == subscription.target) {
-                return false;
+        var subscription = EventSource.Subscribe.call (this, target, receiver);
+        if (subscription != null) {
+            subscription["contract"] = contract;
+            if (this.HasData ()) {
+                receiver.apply (target, [Jane.events.DATA_POPULATED, this.cachedData]);
             }
         }
-        console.log (target.name + " subscribes to " + this.name);
-        this.subscriptions.push ({ "target" : target, "receiver" : receiver, "contract" : contract});
-        if (this.HasData ()) {
-            receiver.apply (target, [Jane.events.DATA_POPULATED, this.cachedData]);
-        }
-        return true;
+        return subscription;
     }
-    return false;
+    return null;
 };
 Jane.DataReference.SubscribeReadOnly = function(target, receiver) {
     return this.Subscribe (target, receiver, {});
-};
-Jane.DataReference.Unsubscribe = function(target) {
-    for (var i = 0, count = this.subscriptions.length; i < count; ++i) {
-        var subscription = this.subscriptions[i];
-        if (target == subscription.target) {
-            this.subscriptions.splice (i, 1);
-            return;
-        }
-    }
-};
-Jane.DataReference.PostEvent = function (event) {
-    for (var i = 0, count = this.subscriptions.length; i < count; ++i) {
-        var subscription = this.subscriptions[i];
-        console.log (this.name + " posting " + event + " to " + subscription.target.name);
-        subscription.receiver.apply (subscription.target, [this, event]);
-    }
 };
 Jane.DataReference.HasData = function () {
     return ("cachedData" in this);
@@ -151,15 +158,15 @@ Jane.DataReference.AddFieldMetaData = function (fieldName, displayName, type, ta
 };
 Jane.DataReference.ValidateMetaData = function () {
 };
-Jane.DataReferenceJson = Object.create(Jane.DataReference);
-Jane.DataReferenceJson.Init = function (params) {
-    (Object.getPrototypeOf((Object.getPrototypeOf(this)))).Init.call(this, params);
+Jane.DataReferenceEspace = Object.create(Jane.DataReference);
+Jane.DataReferenceEspace.Init = function (params) {
+    Jane.DataReference.Init.call(this, params);
     if ("url" in params) this["url"] = params["url"];
     if ("metaDataUrl" in params) this["metaDataUrl"] = params["metaDataUrl"];
     this.PopulateMetaData();
     return this;
 };
-Jane.DataReferenceJson.PopulateMetaData = function () {
+Jane.DataReferenceEspace.PopulateMetaData = function () {
     if (! this.HasMetaData()) {
         var scope = this;
         $.getJSON(this.metaDataUrl, function (metaData) {
@@ -167,7 +174,7 @@ Jane.DataReferenceJson.PopulateMetaData = function () {
         });
     }
 };
-Jane.DataReferenceJson.PopulateMetaDataResponse = function (metaData) {
+Jane.DataReferenceEspace.PopulateMetaDataResponse = function (metaData) {
     console.log (this.name + " populate metaData");
     var fields = metaData.columns;
     for (var i = 0, count = fields.length; i < count; ++i) {
@@ -179,11 +186,11 @@ Jane.DataReferenceJson.PopulateMetaDataResponse = function (metaData) {
         this.PopulateData();
     }
 };
-Jane.DataReferenceJson.PopulateData = function () {
+Jane.DataReferenceEspace.PopulateData = function () {
     if (this.HasMetaData ()) {
         var scope = this;
         $.getJSON(this.url, function (data) {
-            scope.PopulateDataResponse(data.data, true, Jane.formats.OBJECT, Jane.events.DATA_POPULATED);
+            scope.PopulateDataResponse(data.rows, true, Jane.formats.OBJECT, Jane.events.DATA_POPULATED);
         });
     } else {
         this.populateRequested = true;
@@ -191,7 +198,7 @@ Jane.DataReferenceJson.PopulateData = function () {
 };
 Jane.DataReferenceCopy = Object.create(Jane.DataReference);
 Jane.DataReferenceCopy.Init = function (params) {
-    (Object.getPrototypeOf((Object.getPrototypeOf(this)))).Init.call(this, params);
+    Jane.DataReference.Init.call(this, params);
     this.filter = null;
     this.select = null;
     this.transform = null;
@@ -326,10 +333,10 @@ Jane.DataReferenceCopy.PopulateData = function () {
     }
 };
 Jane.DataReferenceCopy.HasMetaData = function () {
-    return ((Object.getPrototypeOf((Object.getPrototypeOf(this)))).HasMetaData.call (this)) ? true : this.source.HasMetaData ();
+    return (Jane.DataReference.HasMetaData.call (this)) ? true : this.source.HasMetaData ();
 };
 Jane.DataReferenceCopy.GetMetaData = function () {
-    return ((Object.getPrototypeOf((Object.getPrototypeOf(this)))).HasMetaData.call (this)) ? (Object.getPrototypeOf((Object.getPrototypeOf(this)))).GetMetaData.call (this) : this.source.GetMetaData ();
+    return (Jane.DataReference.HasMetaData.call (this)) ? Jane.DataReference.GetMetaData.call (this) : this.source.GetMetaData ();
 };
 Jane.TransformFlatten = Object.create(null);
 Jane.TransformFlatten.name = "Flatten";

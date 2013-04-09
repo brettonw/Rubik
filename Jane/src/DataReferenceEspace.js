@@ -3,11 +3,14 @@
 //  
 //------------------------------------------------------------------------------
 
-Jane.DataReferenceJson = Object.create(Jane.DataReference);
+Jane.DataReferenceEspace = Object.create(Jane.DataReference);
 
-Jane.DataReferenceJson.Init = function (params) {
+Jane.DataReferenceEspace.Init = function (params) {
     // do the parental init, and then do my thing here
-    SUPER.Init.call(this, params);
+    Jane.DataReference.Init.call(this, params);
+
+    // the data source should come in as a result set with a link to metadata
+    // and the source rows
     
     // copy some parameters
     COPY_PARAM(url, params);
@@ -19,17 +22,18 @@ Jane.DataReferenceJson.Init = function (params) {
     return this;
 };
 
-Jane.DataReferenceJson.PopulateMetaData = function () {
+Jane.DataReferenceEspace.PopulateMetaData = function () {
     if (NOT this.HasMetaData()) {
         // use jquery to fetch the JSON response
         var scope = this;
         $.getJSON(this.metaDataUrl, function (metaData) {
+            // XXX what are the failure modes here?
             scope.PopulateMetaDataResponse(metaData);
         });
     }
 };
 
-Jane.DataReferenceJson.PopulateMetaDataResponse = function (metaData) {
+Jane.DataReferenceEspace.PopulateMetaDataResponse = function (metaData) {
     DEBUGLOG (this.name + " populate metaData");
     // process the metaData format from the espace program
     // XXX can this be discoverable somehow
@@ -48,13 +52,14 @@ Jane.DataReferenceJson.PopulateMetaDataResponse = function (metaData) {
     }
 };
 
-Jane.DataReferenceJson.PopulateData = function () {
+Jane.DataReferenceEspace.PopulateData = function () {
     // don't do this unless we already have metaData
     if (this.HasMetaData ()) {
         // use jquery to fetch the JSON response
         var scope = this;
         $.getJSON(this.url, function (data) {
-            scope.PopulateDataResponse(data.data, true, Jane.formats.OBJECT, Jane.events.DATA_POPULATED);
+            // XXX what are the failure modes here?
+            scope.PopulateDataResponse(data.rows, true, Jane.formats.OBJECT, Jane.events.DATA_POPULATED);
         });
     } else {
         this.populateRequested = true;
