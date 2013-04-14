@@ -27,7 +27,7 @@ Jane.DataReferenceEspace.Init = function (resultSet) {
     // copy some parameters
     COPY_PARAM_AS(resultSetUrl, dataUrl, resultSet);
     COPY_PARAM_AS(cdmMapUrl, metaDataUrl, resultSet);
-    COPY_PARAM_AS(numRows, rowCount, resultSet);
+    COPY_PARAM_AS(numRows, recordCount, resultSet);
 
     // try to populate the metaData
     this.PopulateMetaData();
@@ -61,6 +61,7 @@ Jane.DataReferenceEspace.PopulateMetaDataResponse = function (metaData) {
         var field = fields[i];
         this.AddFieldMetaData(field.accessName, field.displayName, field.types[0], field.tags);
     }
+    this.ValidateMetaData ();
 
     // if we held off requesting data because we didn't have metaData yet...
     if ("populateRequested" in this) {
@@ -76,6 +77,8 @@ Jane.DataReferenceEspace.PopulateData = function () {
         var scope = this;
         $.getJSON(this.dataUrl, function (data) {
             // XXX what are the failure modes here?
+            // XXX I can also verify the numRecords value against the size of 
+            // XXX the rows array returned
             scope.PopulateDataResponse(data.rows, true, Jane.formats.OBJECT, Jane.events.DATA_POPULATED);
         });
     } else {

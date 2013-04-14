@@ -18,6 +18,7 @@
       <fileset dir="${source-dir}" includes="macros.h"/>
       <fileset dir="${source-dir}" includes="EventSource.js"/>
       <fileset dir="${source-dir}" includes="Jane.js"/>
+      <fileset dir="${source-dir}" includes="Utility.js"/>
       <fileset dir="${source-dir}" includes="DataReference.js"/>
       <fileset dir="${source-dir}" includes="DataReferenceEspace.js"/>
       <fileset dir="${source-dir}" includes="DataReferenceCopy.js"/>
