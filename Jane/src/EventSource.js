@@ -44,6 +44,7 @@ EventSource.Subscribe = function (target, receiver) {
 
 EventSource.Unsubscribe = function (target) {
     // the subscriptions array is examined to remove the target
+    // XXX this probably won't work - indexOf is assuming target is not an object
     var i = this.subscriptions.indexOf(target);
     if (i >= 0) {
         this.subscriptions.splice(i, 1);

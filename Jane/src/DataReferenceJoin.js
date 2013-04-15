@@ -1,30 +1,25 @@
 //------------------------------------------------------------------------------
-// A Jane Data Reference (JDR) Copy is an abstract, lightweight JDR that 
-// describes a data source as a filter, sort, and/or transformation of one or
-// more JDRs.
+// A Jane Data Reference (JDR) Join is a deep copy of two other JDRs using 
+// typical JOIN database concepts on a single field with matching criteria.
+//
+// - Inner Join delivers all records that match the field criteria for both
+//   source JDRs, i.e. the intersection of the two JDRs.
+// - Left Outer Join delivers all the records in the left JDR, merged with 
+//   records from the right JDR that match the field criteria.
+// - Right Outer Join delivers all the records in the right JDR, merged with
+//   records from the left JDR that match the field criteria.
+// - Full Outer Join delivers all records from both the left and the right JDR,
+//   with records that match the field criteria merged.
 //
 // object interface
-//  - property: select - an array of fields to select, an empty selection is
-//                       shorthand for all the fields
-//  - property: sort - an array of objects that contain a name, and asc (boolean)
-//  - property: filter - an object that implements the filter plugin interface
-//  - property: transform - an object that implements the transform plugin interface
-//
-//  - function: Orphan - disconnect a populated data reference from its source
-//                       data references
-//
-// filter and transform plugins are javascript objects with a defined interface:
-//  - property: name
-//  - function: HandleRecord (record)
+//  - property: match - the name of the field to match when merging, we assume
+//                      equality is the matching criteria
 //  
-// we assume that all record formats implement the bracket notation to retrieve 
-// fields within the record
-//
 //------------------------------------------------------------------------------
 
-Jane.DataReferenceCopy = Object.create(Jane.DataReference);
+Jane.DataReferenceJoin = Object.create(Jane.DataReference);
 
-Jane.DataReferenceCopy.Init = function (params) {
+Jane.DataReferenceJoin.Init = function (params) {
     // do the parental init, and then do my thing here
     Jane.DataReference.Init.call(this, params);
 
@@ -34,8 +29,12 @@ Jane.DataReferenceCopy.Init = function (params) {
     this.transform = null;
     this.sort = null;
 
-    // copy the sources
-    COPY_PARAM(source, params);
+    // one of the inputs should be the JDR this one is referencing, save it, and 
+    // subscribe to events on it
+    COPY_PARAM(match, params);
+    COPY_PARAM(joinType, params);
+    COPY_PARAM(left, params);
+    COPY_PARAM(right, params);
     this.source.SubscribeReadOnly (this, this.ReceiveEvent);
 
     return this;
@@ -76,7 +75,7 @@ Jane.DataReferenceCopy.Validate = function () {
     return true;
 };
 
-Jane.DataReferenceCopy.CopyData = function (records, event) {
+Jane.DataReferenceCopy.CopyData = function (rows, event) {
     // this is where we implement filtering, transformation, and sorting
     // XXX TODO - implement a SQL-like language for the implementation?
     if (this.Validate ()) {
@@ -84,9 +83,9 @@ Jane.DataReferenceCopy.CopyData = function (records, event) {
         var readOnly = this.GetDataIsReadOnly();
 
         // loop over all the records
-        var newRecords = [];
-        for (var i = 0, count = records.length; i < count; ++i) {
-            var record = records[i];
+        var newRows = [];
+        for (var i = 0, count = rows.length; i < count; ++i) {
+            var record = rows[i];
             // filter
             if ((this.filter == null) OR (this.filter.HandleRecord (record))) {
                 // select
@@ -116,20 +115,43 @@ Jane.DataReferenceCopy.CopyData = function (records, event) {
                 }
 
                 // save it
-                newRecords.push(record);
+                newRows.push(record);
             }
         }
 
         // sort
+        // XXX this might need to be more sophisticated if a sort field is not a
+        // XXX string or number (like... a date object)
         if (this.sort != null) {
             var scope = this;
             var metaData = this.GetMetaData ();
             var sortCount = this.sort.length;
             var sortFunc = function (a, b) {
+                var sortOrderLexical = function(a, b, type, asc) {
+                    switch (type) {
+                        case "integer" :
+                        case "double" :
+                        case "string" : {
+                            var na = Number(a);
+                            var nb = Number(b);
+                            if ((na == a.toString ()) && (nb == b.toString ())) {
+                                return asc ? (na - nb) : (nb - na);
+                            }
+                            return asc ? a.localeCompare (b) : b.localeCompare (a);
+                        } break;
+                        case "temporal" : {
+                            var da = new Date(a).valueOf ();
+                            var db = new Date(b).valueOf ();
+                            return asc ? (da - db) : (db - da);
+                        } break;
+                    };
+                    return 0;
+                };
+
                 // loop over all of the sort fields, checking that they are valid first
                 for (var i = 0, count = scope.sort.length; i < count; ++i) {
                     var sortField = scope.sort[i];
-                    var sortResult = Jane.Utility.SortLexical(a[sortField.name], b[sortField.name], metaData.fields[sortField.name].type, sortField.asc);
+                    var sortResult = sortOrderLexical(a[sortField.name], b[sortField.name], metaData.fields[sortField.name].type, sortField.asc);
                     if (sortResult != 0) {
                         return sortResult;
                     }
@@ -137,9 +159,9 @@ Jane.DataReferenceCopy.CopyData = function (records, event) {
 
                 return 0;
             };
-            newRecords.sort (sortFunc);
+            newRows.sort (sortFunc);
         }                
-        this.PopulateDataResponse(newRecords, readOnly, format, event);
+        this.PopulateDataResponse(newRows, readOnly, format, event);
     }
 };
 

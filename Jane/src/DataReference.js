@@ -24,6 +24,7 @@
 //  - property: metaData - object with fieldName as keys, contains objects with
 //                         fieldName, displayName, and type
 //  - property: allowFlushForSubscription
+//  - property: primaryKey - name of the field to use for indexing
 //
 // global interface
 //  + property: events
@@ -45,10 +46,16 @@
 // NOTE - we assume that all sources will use the "_HIGHLIGHTED_" key to 
 // indicate the highlighted status of a record.
 //
-// cached data is an object with three properties:
+// Cached data is an object with three properties:
 //  - property: data
 //  - property: readOnly
 //  - property: format
+//
+// Indexes are built on fields tagged as "indexed", and "primary key" in the 
+// meta data. Indexes are a simple array of objects containing the indexed field 
+// and the array index of that record, then sorted on the indexed field to 
+// facilitate fast binary searching and criteria matching (==, <>, <, and >).
+// They are stored in the cached data segment.
 //  
 //------------------------------------------------------------------------------
 
@@ -65,6 +72,7 @@ Jane.DataReference.Init = function(params) {
         "fields" : {},
         "tags" : {}
     };
+    this.primaryKey = Jane.constants.__IDENTIFIER__;
     
     // copy some parameters
     COPY_PARAM(allowFlushForSubscription, params);
@@ -136,7 +144,7 @@ Jane.DataReference.HasData = function () {
 };
 
 Jane.DataReference.GetData = function () {
-    return (this.HasData ()) ? this.cachedData.rows : null;
+    return (this.HasData ()) ? this.cachedData.records : null;
 };
 
 Jane.DataReference.GetDataIsReadOnly = function() {
@@ -164,10 +172,52 @@ Jane.DataReference.GetDataFormat = function() {
     return Jane.formats.EMPTY;
 };
 
-Jane.DataReference.PopulateDataResponse = function (rows, readOnly, format, event) {
+Jane.DataReference.BuildIndex = function (fieldName) {
+	if (NOT (fieldName in this.cachedData.indexes)) {
+		var index = [];
+		
+		// create the index
+		var records = this.cachedData.records;
+		for (var i = 0, count = records.length; i < count; ++i) {
+			var record = records[i];
+			index.push ({ "value" : record[fieldName], "index" : i});
+		}
+		
+		// sort the index
+		var sortFunc = function (a, b) {
+			return Jane.Utility.SortLexical(a.value, b.value, metaData.fields[fieldName].type, true);
+		};
+		index.sort (sortFunc);
+
+		// save the index
+		this.cachedData.indexes[fieldName] = index;
+	}
+};
+
+Jane.DataReference.ValidatePrimaryKey = function () {
+	var primaryKey = this.primaryKey;
+	var records = this.cachedData.records;
+	if (NOT (primaryKey in records[0])) {
+		// walk over the entire recordset to add the primary key
+		var primaryKey = this.primaryKey;
+		for (var i = 0, count = records.length; i < count; ++i) {
+			records[i][primaryKey] = i;
+		}
+	} 
+};
+
+Jane.DataReference.PopulateDataResponse = function (records, readOnly, format, event) {
     // whatever mechanism populates the data is descendant classes, it should
     // call this method. 
-    this.cachedData = { "rows" : rows, "readOnly" : readOnly, "format" : format };
+    this.cachedData = { "records" : records, "readOnly" : readOnly, "format" : format, "indexes" : {} };
+    this.ValidatePrimaryKey ();
+    
+    // build the indices, primary key first
+	this.BuildIndex (this.primaryKey);
+	var indexedFields = this.metaData.tags["indexed"];
+    for (var i = 0, count = indexedFields.length; i < count; ++i) {
+		this.BuildIndex (indexedFields[i]);
+    }
     this.PostEvent (event);
 };
 
@@ -200,6 +250,14 @@ Jane.DataReference.GetMetaData = function () {
     return this.metaData;
 };
 
+Jane.DataReference.AddTagMetaData = function (tag, fieldName) {
+	DEBUGLOG (this.name + " tagging " + fieldName + " (" + tag + ")");
+	if (NOT (tag in this.metaData.tags)) {
+		this.metaData.tags[tag] = [];
+	}
+	this.metaData.tags[tag].push (field);
+};
+
 Jane.DataReference.AddFieldMetaData = function (fieldName, displayName, type, tags) {
     DEBUGLOG (this.name + " adding metaData for " + fieldName + " as " + type);
     var field = {
@@ -212,16 +270,17 @@ Jane.DataReference.AddFieldMetaData = function (fieldName, displayName, type, ta
     // tags is an array of values, we store the tags as their own keys, with 
     // references to the fields they are associated with
     for (var i = 0, count = tags.length; i < count; ++i) {
-        var tag = tags[i];
-        DEBUGLOG (this.name + " tagging " + fieldName + " (" + tag + ")");
-        if (NOT (tag in this.metaData.tags)) {
-            this.metaData.tags[tag] = [];
-        }
-        this.metaData.tags[tag].push (field);
+        this.AddTagMetaData (tags[i], fieldName);
     }
 };
 
 Jane.DataReference.ValidateMetaData = function () {
-    // need a primary key...
-
+    // need a primary key, otherwise create one
+    var metaData = this.GetMetaData ();
+	if ("primary key" in metaData.tags) {
+		this.primaryKey = metaData.tags["primary key"][0];
+	} else {
+        this.AddFieldMetaData (this.primaryKey, "Key", "integer", ["primary key"]);
+	}
 };
+
