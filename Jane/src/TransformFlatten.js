@@ -16,7 +16,7 @@ Jane.TransformFlatten.EnumerateRecord = function (record, into) {
             var value = record[key];
             var valueType = typeof (value);
             if (valueType == "object") {
-                EnumerateRecord(value, into);
+                this.EnumerateRecord(value, into);
             } else {
                 into[key] = value;
             }

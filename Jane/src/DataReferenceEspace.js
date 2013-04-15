@@ -27,6 +27,7 @@ Jane.DataReferenceEspace.Init = function (resultSet) {
     // copy some parameters
     COPY_PARAM_AS(resultSetUrl, dataUrl, resultSet);
     COPY_PARAM_AS(cdmMapUrl, metaDataUrl, resultSet);
+    COPY_PARAM_AS(dataSourceName, metaDataName, resultSet);
     COPY_PARAM_AS(numRows, rowCount, resultSet);
 
     // try to populate the metaData
@@ -38,8 +39,9 @@ Jane.DataReferenceEspace.Init = function (resultSet) {
 Jane.DataReferenceEspace.PopulateMetaData = function () {
     if (NOT this.HasMetaData()) {
         // if the metaDataUrl is a relative URL...
-        var dataUri = parseUri (this.dataUrl);
-        var metaDataUrl = dataUri.protocol + "://" + dataUri.authority + this.metaDataUrl;
+        var parser = document.createElement('a');
+        parser.href = this.dataUrl;
+        var metaDataUrl = parser.protocol + "//" + parser.host + "/espace/rest/data/sources/" + this.metaDataName;
 
         // use jquery to fetch the JSON response
         var scope = this;

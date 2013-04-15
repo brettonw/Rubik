@@ -168,14 +168,16 @@ Jane.DataReferenceEspace.Init = function (resultSet) {
     Jane.DataReference.Init.call(this, { "name" : resultSet.resultSetName });
     if ("resultSetUrl" in resultSet) this["dataUrl"] = resultSet["resultSetUrl"];
     if ("cdmMapUrl" in resultSet) this["metaDataUrl"] = resultSet["cdmMapUrl"];
+    if ("dataSourceName" in resultSet) this["metaDataName"] = resultSet["dataSourceName"];
     if ("numRows" in resultSet) this["rowCount"] = resultSet["numRows"];
     this.PopulateMetaData();
     return this;
 };
 Jane.DataReferenceEspace.PopulateMetaData = function () {
     if (! this.HasMetaData()) {
-        var dataUri = parseUri (this.dataUrl);
-        var metaDataUrl = dataUri.protocol + "://" + dataUri.authority + this.metaDataUrl;
+        var parser = document.createElement('a');
+        parser.href = this.dataUrl;
+        var metaDataUrl = parser.protocol + "//" + parser.host + "/espace/rest/data/sources/" + this.metaDataName;
         var scope = this;
         $.getJSON(metaDataUrl, function (metaData) {
             scope.PopulateMetaDataResponse(metaData);
@@ -354,7 +356,7 @@ Jane.TransformFlatten.EnumerateRecord = function (record, into) {
             var value = record[key];
             var valueType = typeof (value);
             if (valueType == "object") {
-                EnumerateRecord(value, into);
+                this.EnumerateRecord(value, into);
             } else {
                 into[key] = value;
             }
