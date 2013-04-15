@@ -27,12 +27,8 @@ Jane.DataReferenceEspace.Init = function (resultSet) {
     // copy some parameters
     COPY_PARAM_AS(resultSetUrl, dataUrl, resultSet);
     COPY_PARAM_AS(cdmMapUrl, metaDataUrl, resultSet);
-<<<<<<< HEAD
     COPY_PARAM_AS(dataSourceName, metaDataName, resultSet);
-    COPY_PARAM_AS(numRows, rowCount, resultSet);
-=======
     COPY_PARAM_AS(numRows, recordCount, resultSet);
->>>>>>> 1d3ffe8f0f0b76f8ff38bac34a30bc6a6be9921a
 
     // try to populate the metaData
     this.PopulateMetaData();
