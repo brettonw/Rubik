@@ -27,12 +27,6 @@ Jane.events = {
     DEFINE_AS(HIGHLIGHT_CHANGED)
 };
 
-Jane.formats = {
-    DEFINE_AS(EMPTY),
-    DEFINE_AS(OBJECT),
-    DEFINE_AS(OBJECT_AS_PROTOTYPE)
-};
-
 Jane.dataRefs = {};
 
 Jane.AddDataReference = function (dataRef) {

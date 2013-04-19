@@ -19,10 +19,13 @@
       <fileset dir="${source-dir}" includes="EventSource.js"/>
       <fileset dir="${source-dir}" includes="Jane.js"/>
       <fileset dir="${source-dir}" includes="Utility.js"/>
-      <fileset dir="${source-dir}" includes="DataReference.js"/>
-      <fileset dir="${source-dir}" includes="DataReferenceEspace.js"/>
-      <fileset dir="${source-dir}" includes="DataReferenceCopy.js"/>
+      <fileset dir="${source-dir}" includes="DataObject.js"/>
+      <fileset dir="${source-dir}" includes="DataObjectReference.js"/>
+      <fileset dir="${source-dir}" includes="DataObjectJoin.js"/>
+      <fileset dir="${source-dir}" includes="DataObjectEspace.js"/>
       <fileset dir="${source-dir}" includes="TransformFlatten.js"/>
+      <fileset dir="${source-dir}" includes="TransformExtract.js"/>
+      <fileset dir="${source-dir}" includes="TransformCompound.js"/>
     </concat>
   </target>
 </project>
