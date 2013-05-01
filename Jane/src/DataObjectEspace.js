@@ -7,15 +7,15 @@ Jane.DataObjectEspace = function (base) {
     var DataObjectEspace = Object.create(base);
 
     DataObjectEspace.Init = function (params) {
-        // do the parental init, and then do my thing here
-        params["name"] = params.resultSetName;
-        base.Init.call(this, params);
-
         // copy some parameters
         COPY_PARAM_AS(resultSetUrl, dataUrl, params);
         COPY_PARAM_AS(cdmMapUrl, metaDataUrl, params);
         COPY_PARAM_AS(dataSourceName, metaDataName, params);
         COPY_PARAM_AS(numRows, recordCount, params);
+
+        // do the parental init
+        params["name"] = params.resultSetName;
+        base.Init.call(this, params);
 
         // try to populate the metaData
         this.PopulateMetaData();

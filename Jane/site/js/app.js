@@ -1,11 +1,16 @@
-// JavaScript source code
-function StartApp() {
+var testLogger;
+
+function RunApp() {
+    // create the tree for display
+    BuildTree();
+
     // the event logger object
-    var testLogger = Object.create(null);
+    testLogger = Object.create(null);
     testLogger.name = "TestLogger";
     testLogger.ReceiveEvent = function (sender, event) {
         console.log(this.name + " receives " + event + " from " + sender.name);
-        debugger;
+        DrawTree();
+        //debugger;
     };
     Jane.Subscribe(testLogger, testLogger.ReceiveEvent);
 
@@ -40,13 +45,17 @@ function StartApp() {
         }
     });
     copyJdr1.SubscribeReadOnly(testLogger, testLogger.ReceiveEvent);
+}
+
+function AddCopy2() {
+    var copyJdr1 = Jane.GetDataReference("Copy 1");
 
     // create and configure a sorted copy of the copy - the logger has a 
     // contract that will cause it to be an array of protos
     var copyJdr2 = Object.create(Jane.DataObjectReference).Init({
         name: "Copy 2",
         source: copyJdr1,
-        sort: [ { name: "Name", asc: true } ]
+        sort: [{ name: "Name", asc: true }]
     });
-    copyJdr2.Subscribe(testLogger, testLogger.ReceiveEvent, { "X" : "X" });
+    copyJdr2.Subscribe(testLogger, testLogger.ReceiveEvent, { "X": "X" });
 }

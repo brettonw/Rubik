@@ -27,23 +27,65 @@ EventSource.PostEvent = function (event) {
         subscription.receiver.apply(subscription.target, [this, event]);
     }
 };
-var Jane = Object.create (EventSource).Init ({ "name" : "Jane" });
-Jane.constants = {
-    __IDENTIFIER__ : "__IDENTIFIER__",
-    __HIGHTLIGHTED__ : "__HIGHTLIGHTED__"
-};
-Jane.events = {
-    DATA_REFERENCE_ADDED : "DATA_REFERENCE_ADDED",
-    DATA_POPULATED : "DATA_POPULATED",
-    DATA_FLUSHED : "DATA_FLUSHED",
-    DATA_CHANGED : "DATA_CHANGED",
-    HIGHLIGHT_CHANGED : "HIGHLIGHT_CHANGED"
-};
-Jane.dataRefs = {};
-Jane.AddDataReference = function (dataRef) {
-    this.dataRefs [dataRef.name] = dataRef;
-    this.PostEvent (Jane.events.DATA_REFERENCE_ADDED);
-};
+var Jane = function () {
+    var Jane = Object.create (EventSource).Init ({ "name" : "Jane" });
+    Jane.constants = {
+        __IDENTIFIER__ : "__IDENTIFIER__",
+        __HIGHTLIGHTED__ : "__HIGHTLIGHTED__"
+    };
+    Jane.events = {
+        DATA_REFERENCE_ADDED : "DATA_REFERENCE_ADDED",
+        DATA_POPULATED : "DATA_POPULATED",
+        DATA_FLUSHED : "DATA_FLUSHED",
+        DATA_CHANGED : "DATA_CHANGED",
+        HIGHLIGHT_CHANGED : "HIGHLIGHT_CHANGED"
+    };
+    Jane.dataRefs = {
+        index : {},
+        nodes : [],
+        links : [],
+        depth : 0,
+        AddNode : function (name, dataRef) {
+            console.log ("node - " + name);
+            var arrayIndex = this.nodes.length;
+            var node = {
+                "name" : name,
+                "arrayIndex" : arrayIndex,
+                "depth" : 0,
+                "children" : [],
+                "dataRef" : dataRef
+            };
+            this.nodes.push (node);
+            this.index[name] = node;
+            return node;
+        }
+    };
+    Jane.dataRefs.AddNode ("Jane", null);
+    Jane.AddDataReference = function (dataRef) {
+        var dataRefs = this.dataRefs;
+        var node = dataRefs.AddNode (dataRef.name, dataRef);
+        var parentName = ("source" in dataRef) ? dataRef.source.name : "Jane";
+        if (parentName in dataRefs.index) {
+            var parent = dataRefs.index[parentName];
+            node.parent = parent;
+            parent.children.push (node);
+            node.depth = parent.depth + 1;
+            dataRefs.depth = Math.max (node.depth, dataRefs.depth);
+            dataRefs.links.push ({
+                "source" : parent.index,
+                "target" : node.index
+            });
+        }
+        this.PostEvent (Jane.events.DATA_REFERENCE_ADDED);
+    };
+    Jane.GetDataReference = function (name) {
+        if (name in this.dataRefs.index) {
+            return this.dataRefs.index[name].dataRef;
+        }
+        return null;
+    };
+    return Jane;
+} ();
 Jane.Utility = function (base) {
     var Utility = Object.create(base);
     Utility.SortLexical = function (a, b, type, asc) {
@@ -335,9 +377,9 @@ Jane.DataObject = function (base) {
 Jane.DataObjectReference = function (base) {
     var DataObjectReference = Object.create(base);
     DataObjectReference.Init = function (params) {
-        base.Init.call(this, params);
         if ("source" in params) this["source"] = params["source"];
-        this.source.SubscribeReadOnly (this, this.ReceiveEvent);
+        base.Init.call(this, params);
+        this.source.SubscribeReadOnly(this, this.ReceiveEvent);
         return this;
     };
     DataObjectReference.ReceiveEvent = function (sender, event) {
@@ -383,12 +425,12 @@ Jane.DataObjectReference = function (base) {
 Jane.DataObjectEspace = function (base) {
     var DataObjectEspace = Object.create(base);
     DataObjectEspace.Init = function (params) {
-        params["name"] = params.resultSetName;
-        base.Init.call(this, params);
         if ("resultSetUrl" in params) this["dataUrl"] = params["resultSetUrl"];
         if ("cdmMapUrl" in params) this["metaDataUrl"] = params["cdmMapUrl"];
         if ("dataSourceName" in params) this["metaDataName"] = params["dataSourceName"];
         if ("numRows" in params) this["recordCount"] = params["numRows"];
+        params["name"] = params.resultSetName;
+        base.Init.call(this, params);
         this.PopulateMetaData();
         return this;
     };

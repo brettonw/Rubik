@@ -16,17 +16,17 @@ Jane.DataObjectReference = function (base) {
     var DataObjectReference = Object.create(base);
 
     DataObjectReference.Init = function (params) {
+        // copy the sources
+        COPY_PARAM(source, params);
+
         // do the parental init, and then do my thing here
         base.Init.call(this, params);
 
-        // copy the sources
-        COPY_PARAM(source, params);
-        this.source.SubscribeReadOnly (this, this.ReceiveEvent);
+        // look to receive events from my source
+        this.source.SubscribeReadOnly(this, this.ReceiveEvent);
 
         return this;
     };
-
-
 
     DataObjectReference.ReceiveEvent = function (sender, event) {
         DEBUGLOG(this.name + " receives " + event + " from " + sender.name);
