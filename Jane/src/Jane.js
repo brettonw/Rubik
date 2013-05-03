@@ -12,11 +12,16 @@
 //
 //------------------------------------------------------------------------------
 var Jane = function () {
+    if (("Jane" in window.top) && (window.top.Jane !== undefined)) {
+        return window.top.Jane;
+    }
+
     var Jane = Object.create (EventSource).Init ({ "name" : "Jane" });
 
     Jane.constants = {
         DEFINE_AS(__IDENTIFIER__),
-        DEFINE_AS(__HIGHTLIGHTED__)
+        DEFINE_AS(__HIGHTLIGHT__),
+        DEFINE_AS(__COLOR__)
     };
 
     Jane.events = {
@@ -68,6 +73,7 @@ var Jane = function () {
             });
         }
 
+        dataRef.SubscribeReadOnly(this, this.ReceiveEvent);
         this.PostEvent (Jane.events.DATA_REFERENCE_ADDED);
     };
 
@@ -78,5 +84,11 @@ var Jane = function () {
         return null;
     };
 
+    Jane.ReceiveEvent = function (sender, event) {
+        console.log(this.name + " receives " + event + " from " + sender.name);
+        this.PostEvent (event);
+    };
+
+    window.top.Jane = Jane;
     return Jane;
 } ();

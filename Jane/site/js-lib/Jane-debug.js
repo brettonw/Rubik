@@ -28,10 +28,14 @@ EventSource.PostEvent = function (event) {
     }
 };
 var Jane = function () {
+    if (("Jane" in window.top) && (window.top.Jane !== undefined)) {
+        return window.top.Jane;
+    }
     var Jane = Object.create (EventSource).Init ({ "name" : "Jane" });
     Jane.constants = {
         __IDENTIFIER__ : "__IDENTIFIER__",
-        __HIGHTLIGHTED__ : "__HIGHTLIGHTED__"
+        __HIGHTLIGHT__ : "__HIGHTLIGHT__",
+        __COLOR__ : "__COLOR__"
     };
     Jane.events = {
         DATA_REFERENCE_ADDED : "DATA_REFERENCE_ADDED",
@@ -76,6 +80,7 @@ var Jane = function () {
                 "target" : node.index
             });
         }
+        dataRef.SubscribeReadOnly(this, this.ReceiveEvent);
         this.PostEvent (Jane.events.DATA_REFERENCE_ADDED);
     };
     Jane.GetDataReference = function (name) {
@@ -84,6 +89,11 @@ var Jane = function () {
         }
         return null;
     };
+    Jane.ReceiveEvent = function (sender, event) {
+        console.log(this.name + " receives " + event + " from " + sender.name);
+        this.PostEvent (event);
+    };
+    window.top.Jane = Jane;
     return Jane;
 } ();
 Jane.Utility = function (base) {

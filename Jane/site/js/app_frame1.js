@@ -1,19 +1,17 @@
 var testLogger;
 
 function RunApp() {
-    // create the tree for display
-    BuildTree();
-
     // the event logger object
     testLogger = Object.create(null);
-    testLogger.name = "TestLogger";
+    testLogger.name = "TestLogger1";
     testLogger.ReceiveEvent = function (sender, event) {
         console.log(this.name + " receives " + event + " from " + sender.name);
-        DrawTree();
-        //debugger;
     };
     Jane.Subscribe(testLogger, testLogger.ReceiveEvent);
 
+}
+
+function AddR() {
     // hardcode the result set
     var resultSet = {
         "resultSetName": "Restaurants",
@@ -32,6 +30,10 @@ function RunApp() {
     espaceParam.transform = Object.create(Jane.TransformExtract).Init({ "extract": "data" });
     var espaceJdr = Object.create(Jane.DataObjectEspace).Init(espaceParam);
     espaceJdr.SubscribeReadOnly(testLogger, testLogger.ReceiveEvent);
+}
+
+function AddCopy1() {
+    var espaceJdr = Jane.GetDataReference("Restaurants");
 
     // create and configure a copy of the source
     var copyJdr1 = Object.create(Jane.DataObjectReference).Init({
@@ -47,15 +49,18 @@ function RunApp() {
     copyJdr1.SubscribeReadOnly(testLogger, testLogger.ReceiveEvent);
 }
 
+var counter = 2;
+
 function AddCopy2() {
     var copyJdr1 = Jane.GetDataReference("Copy 1");
 
     // create and configure a sorted copy of the copy - the logger has a 
     // contract that will cause it to be an array of protos
     var copyJdr2 = Object.create(Jane.DataObjectReference).Init({
-        name: "Copy 2",
+        name: "Copy " + counter,
         source: copyJdr1,
         sort: [{ name: "Name", asc: true }]
     });
     copyJdr2.Subscribe(testLogger, testLogger.ReceiveEvent, { "X": "X" });
+    ++counter;
 }
