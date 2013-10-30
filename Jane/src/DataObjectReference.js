@@ -15,60 +15,58 @@
 Jane.DataObjectReference = function (base) {
     var DataObjectReference = Object.create(base);
 
-    DataObjectReference.Init = function (params) {
+    DataObjectReference.init = function (params) {
         // copy the sources
         COPY_PARAM(source, params);
 
         // do the parental init, and then do my thing here
-        base.Init.call(this, params);
-
-        // look to receive events from my source
-        this.source.SubscribeReadOnly(this, this.ReceiveEvent);
-
-        return this;
+        var dataObject = base.init.call(this, params);
+        if (dataObject !== null) {
+            // look to receive events from my source, so I can handle refresh 
+            this.monitor = Object.create(EventSubscriber).init({ "name": (this.name + ".monitor") });
+            var self = this;
+            this.monitor.receiveEvent = function (source, event, parameter) {
+                // forward the event back to the DataObjectReference itself
+                self.handleSourceEvent(source, event, parameter);
+            };
+            this.source.addSubscriberReadOnly(this.monitor);
+        }
+        return dataObject;
     };
 
-    DataObjectReference.ReceiveEvent = function (sender, event) {
-        DEBUGLOG(this.name + " receives " + event + " from " + sender.name);
+    DataObjectReference.handleSourceEvent = function (source, event, parameter) {
+        DEBUGLOG(this.name + " receives " + event + " from " + source.name);
         switch (event) {
             case Jane.events.DATA_POPULATED:
                 // we should only populate if we requested this
                 if ("populateRequested" in this) {
-                    delete this.populateRequested;
-                    this.PopulateDataResponse(sender.GetData(), event);
+                    this.populateResponse(source.getBag(), event);
                 }
                 break;
             case Jane.events.DATA_CHANGED:
-                if (this.HasData()) {
-                    this.PopulateDataResponse(sender.GetData(), event);
+                if (this.hasBag()) {
+                    this.populateResponse(source.gatBag(), event);
                 }
                 break;
             case Jane.events.DATA_FLUSHED:
-                if (this.HasData()) {
-                    this.Flush ();
-                }
+                // could check that the source is my source...
+                this.flush();
                 break;
             default:
                 break;
         }
     };
 
-    DataObjectReference.PopulateData = function () {
-        var sourceData = this.source.GetData();
-        if (sourceData != null) {
-            this.PopulateDataResponse(sourceData, Jane.events.DATA_POPULATED);
+    DataObjectReference.populateExec = function () {
+        // do the parental thing
+        base.populateExec.call(this);
+
+        var sourceBag = this.source.getBag ();
+        if (sourceBag != null) {
+            this.populateResponse(sourceBag, Jane.events.DATA_POPULATED);
         } else {
-            this.populateRequested = true;
-            this.source.Populate();
+            this.source.populate();
         }
-    };
-
-    DataObjectReference.HasMetaData = function () {
-        return  (base.HasMetaData.call (this)) ? true : this.source.HasMetaData ();
-    };
-
-    DataObjectReference.GetMetaData = function () {
-        return  (base.HasMetaData.call (this)) ? base.GetMetaData.call (this) : this.source.GetMetaData ();
     };
 
     return DataObjectReference;

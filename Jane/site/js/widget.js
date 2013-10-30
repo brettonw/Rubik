@@ -9,7 +9,7 @@ var margins = [50, 50, 50, 50],
 var tree = null;
 var diagonal = d3.svg.diagonal().projection(function (d) { return [d.y, d.x]; });
 
-function BuildTree() {
+function buildTree() {
     tree = d3.layout.tree().size([displayHeight, displayWidth]);
 
     if (visDisplay != null) {
@@ -26,29 +26,29 @@ function BuildTree() {
         .attr("transform", "translate(" + margins[3] + "," + margins[0] + ")");
 
     // get the Jane display tree
-    var root = Jane.dataRefs.nodes[0];
+    var root = Jane.dataRefs.root;
 
     root.x0 = root.x = displayHeight / 2;
     root.y0 = root.y = 0;
 
-    UpdateTreeDisplay(root);
+    updateTreeDisplay(root);
 }
 
 var ColorNode = function (d) {
     if (d.dataRef != null) {
-        return d.dataRef.HasData() ? "#4f4" : "#f44";
+        return d.dataRef.hasBag() ? "#4f4" : (("populateRequested" in d.dataRef) ? "#ff4" : "#88f");
     }
     return "#44f";
 };
 
-function UpdateTreeDisplay(source) {
+function updateTreeDisplay(source) {
     var treeRootX = displayHeight / 2;
     var treeRootY = 0;
 
     var duration = d3.event && d3.event.altKey ? 5000 : 500;
 
     // Compute the new tree layout.
-    var root = Jane.dataRefs.nodes[0];
+    var root = Jane.dataRefs.root;
     var nodes = tree.nodes(root).reverse();
 
     // space the nodes according to the tree depth
@@ -68,6 +68,9 @@ function UpdateTreeDisplay(source) {
             return "translate(" + d.y0 + "," + d.x0 + ")";
         })
         .on("click", function (d) {
+            Jane.postEvent(Jane.events.DATA_REFERENCE_SELECTED, d.dataRef);
+            })
+        .on("dblclick", function (d) {
             if (d.children) {
                 d._children = d.children;
                 d.children = null;
@@ -75,7 +78,13 @@ function UpdateTreeDisplay(source) {
                 d.children = d._children;
                 d._children = null;
             }
-            UpdateTreeDisplay(d);
+            updateTreeDisplay(d);
+        })
+        .on("contextmenu", function (data, index) {
+            //handle right click
+
+            //stop showing browser menu
+            d3.event.preventDefault();
         });
 
     nodeEnter.append("svg:circle")
@@ -87,7 +96,8 @@ function UpdateTreeDisplay(source) {
         .attr("dy", ".35em")
         .attr("text-anchor", function (d) { return d.children || d._children ? "end" : "start"; })
         .text(function (d) { return d.name; })
-        .style("fill-opacity", 1e-6);
+        .style("fill-opacity", 1e-6)
+        ;
 
     // Transition nodes to their new position.
     var nodeUpdate = node.transition()
@@ -149,7 +159,7 @@ function UpdateTreeDisplay(source) {
     });
 }
 
-function DrawTree() {
-    UpdateTreeDisplay(Jane.dataRefs.nodes[0]);
+function drawTree() {
+    updateTreeDisplay(Jane.dataRefs.root);
 }
 

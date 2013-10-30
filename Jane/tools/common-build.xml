@@ -1,5 +1,11 @@
 <project name="Common" default="debug" basedir=".">
-    <target name="debug" depends="debug-init, js-copy" description="Development build"/>
+
+  <property name="concat-target" value="${ant.project.name}-concat.js"/>
+  <property name="preprocess-target" value="${ant.project.name}-preprocess.js"/>
+  <property name="debug-target" value="${ant.project.name}-debug.js"/>
+  <property name="release-target" value="${ant.project.name}.js"/>
+
+  <target name="debug" depends="debug-init, js-copy" description="Development build"/>
 
     <target name="debug-init">
         <property name="final-target" value="${debug-target}"/>

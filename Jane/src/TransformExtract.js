@@ -1,11 +1,11 @@
 //------------------------------------------------------------------------------
 // filter and transform plugins are javascript objects with a defined interface:
 //  - property: name
-//  - function: HandleRecord (record)
+//  - function: handleRecord (record, readOnly)
 //  
 //------------------------------------------------------------------------------
-Jane.TransformExtract = function (base) {
-    var TransformExtract = Object.create(base, {
+Jane.Transform.Extract = function (base) {
+    var Extract = Object.create(base, {
         "name": {
             "value": "Extract",
             "enumerable": true,
@@ -18,19 +18,19 @@ Jane.TransformExtract = function (base) {
         }
     });
 
-    TransformExtract.Init = function (params) {
+    Extract.init = function (params) {
         // copy some parameters
         COPY_PARAM(extract, params);
         return this;
     };
 
-    TransformExtract.HandleRecord = function (record, readOnly) {
+    Extract.handleRecord = function (record, writable) {
         // don't really need to check that the transform has been created correctly
         // since it will fail without...
 
         // "extract" uses one sub-element of the record passed in as the record
         if (this.extract in record) {
-            return readOnly ? record[this.extract] : Object.create(record[this.extract]);
+            return writable ? Object.create(record[this.extract]) : record[this.extract];
         } else {
             // couldn't do it, log the error and return the original
             DEBUGLOG("Can't extract '" + this.extract + "' from record");
@@ -39,5 +39,5 @@ Jane.TransformExtract = function (base) {
         return record;
     };
 
-    return TransformExtract;
+    return Extract;
 }(null);

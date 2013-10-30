@@ -6,103 +6,83 @@
 Jane.DataObjectEspace = function (base) {
     var DataObjectEspace = Object.create(base);
 
-    DataObjectEspace.Init = function (params) {
+    DataObjectEspace.init = function (params) {
         // copy some parameters
         COPY_PARAM_AS(resultSetUrl, dataUrl, params);
         COPY_PARAM_AS(cdmMapUrl, metaDataUrl, params);
-        COPY_PARAM_AS(dataSourceName, metaDataName, params);
+        COPY_PARAM_AS(resultSetId, resultSetId, params);
         COPY_PARAM_AS(numRows, recordCount, params);
 
         // do the parental init
-        params["name"] = params.resultSetName;
-        base.Init.call(this, params);
-
-        // try to populate the metaData
-        this.PopulateMetaData();
-
-        return this;
+        params["name"] = params.dataSourceName + " (" + params.resultSetName + ")";
+        return base.init.call(this, params);
     };
 
-    DataObjectEspace.PopulateMetaData = function () {
-        if (!this.HasMetaData()) {
-            // if the metaDataUrl is a relative URL...
-            var parser = document.createElement('a');
-            parser.href = this.dataUrl;
-            var metaDataUrl = parser.protocol + "//" + parser.host + "/espace/rest/data/sources/" + this.metaDataName;
+    DataObjectEspace.populateExec = function () {
+        // do the parental thing
+        base.populateExec.call(this);
 
-            // use jquery to fetch the JSON response
-            var scope = this;
-            $.getJSON(metaDataUrl, function (metaData) {
-                // XXX what are the failure modes here?
-                scope.PopulateMetaDataResponse(metaData);
+        // use jquery to fetch the JSON response
+        var scope = this;
+        $.getJSON(this.dataUrl, function (data) {
+            // XXX what are the failure modes here?
+
+            // make a new metaData object
+            DEBUGLOG(scope.name + " populate metaData");
+            var metaData = Object.create(Jane.MetaData).init({});
+
+            // add the column meta data
+            var espaceMetaData = data.table.metaData.rowSetMetadata;
+            var columns = espaceMetaData.columnMetadata;
+            Object.getOwnPropertyNames(columns).forEach(function (key) {
+                var column = columns[key];
+                var type = (column.types.length > 0) ? column.types[0] : "string";
+                metaData.addColumn(column.displayName, type, column.tags);
             });
-        }
-    };
 
-    DataObjectEspace.PopulateMetaDataResponse = function (espaceMetaData) {
-        DEBUGLOG(this.name + " populate metaData");
-        // save the metaData format from the espace program
-        this.espaceMetaData = espaceMetaData;
-
-        // add the field meta data
-        var fields = espaceMetaData.columns;
-        for (var i = 0, count = fields.length; i < count; ++i) {
-            var field = fields[i];
-            this.AddFieldMetaData(field.accessName, field.displayName, field.types[0], field.tags);
-        }
-        this.ValidateMetaData();
-
-        // if we held off requesting data because we didn't have metaData yet...
-        if ("populateRequested" in this) {
-            delete this.populateRequested;
-            this.PopulateData();
-        }
-    };
-
-    DataObjectEspace.PopulateEspaceFields = function (rows) {
-        // XXX interval columns
-        // geo columns are all we handle right now
-        // XXX timestep columns
-        var espaceMetaData = this.espaceMetaData;
-        var geoColumns = espaceMetaData.geoColumns;
-        for (var i = 0, iCount = geoColumns.length; i < iCount; ++i) {
-            var geoColumn = geoColumns[i];
-            // the access name is where the field is...
-            var findDisplaybyAccessName = function (accessName) {
-                for (var k = 0, kCount = espaceMetaData.columns.length; k < kCount; ++k) {
-                    var column = espaceMetaData.columns[k];
-                    if (column.accessName == accessName) {
-                        return column.displayName;
-                    }
-                }
-            };
-            var fieldName = findDisplaybyAccessName(geoColumn.geoColumn);
-            var lonFieldName = findDisplaybyAccessName(geoColumn.lonColumn);
-            var latFieldName = findDisplaybyAccessName(geoColumn.latColumn);
-
-            // loop over all the rows to populate the field
-            for (var j = 0, jCount = rows.length; j < jCount; ++j) {
-                var rowData = rows[j].data;
-                rowData[fieldName] = { "longitude": rowData[lonFieldName], "latitude": rowData[latFieldName] };
+            var assembledColumns = [];
+            // XXX convert the known columns to the desired metaData structure for
+            // XXX assembled columns
+            var geoPointColumns = espaceMetaData.geoPointColumns;
+            for (var i = 0, count = geoPointColumns.length; i < count; ++i) {
+                var geoPointColumn = geoPointColumns[i];
+                var longitudeColumnName = columns[geoPointColumn.longitudeColumn].displayName;
+                var latitudeColumnName = columns[geoPointColumn.latitudeColumn].displayName;
+                var assembledColumn = {
+                    "typeName": "GeoPoint",
+                    "displayName": geoPointColumn.displayName,
+                    "values": [
+                        { "displayName": "longitude", "sourceColumn": longitudeColumnName },
+                        { "displayName": "latitude", "sourceColumn": latitudeColumnName }
+                    ]
+                };
+                assembledColumns.push(assembledColumn);
             }
-        }
-    };
 
-    DataObjectEspace.PopulateData = function () {
-        // don't do this unless we already have metaData
-        if (this.HasMetaData()) {
-            // use jquery to fetch the JSON response
-            var scope = this;
-            $.getJSON(this.dataUrl, function (data) {
-                // XXX what are the failure modes here?
-                // XXX I can also verify the numRecords value against the size of 
-                // XXX the rows array returned
-                scope.PopulateEspaceFields(data.rows);
-                scope.PopulateDataResponse(data.rows, Jane.events.DATA_POPULATED);
+            // create transforms for the data
+            var transforms = [Object.create(Jane.Transform.Extract).init({ "extract": "data" })];
+
+            // add the assembled columns metadata and transforms
+            // XXX might be interesting to validate the assembly against known canonical types
+            for (var i = 0, count = assembledColumns.length; i < count; ++i) {
+                var assembledColumn = assembledColumns[i];
+                metaData.addColumn(assembledColumn.displayName, assembledColumn.typeName, []);
+                var transformAssemble = Object.create(Jane.Transform.Assemble).init(assembledColumn);
+                transforms.push(transformAssemble);
+            }
+            scope.transform = Object.create(Jane.Transform.Compound).init({ "transforms": transforms });
+
+            // make a new bag with the data
+            var bag = Object.create(Jane.Bag).init({
+                "namespace" : "espace",
+                "metaData"  : metaData,
+                "records"   : data.table.rows, 
+                "writable"  : false
             });
-        } else {
-            this.populateRequested = true;
-        }
+
+            // populate response...
+            scope.populateResponse(bag, Jane.events.DATA_POPULATED);
+        });
     };
 
     return DataObjectEspace;

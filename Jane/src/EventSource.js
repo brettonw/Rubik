@@ -1,10 +1,10 @@
 //------------------------------------------------------------------------------
-// An EventSource is a base class implementing a subscription event model.
+// An EventSource is a base class implementing a subscriber event model.
 //
 // object interface
-//  - function: Subscribe (target, receiver, contract)
-//  - function: Unsubscribe (target)
-//  - function: PostEvent (event)
+//  - function: addSubscriber (subscriber)
+//  - function: removeSubscriber (subscriber)
+//  - function: postEvent (event, parameter)
 //
 //  - property: name
 //
@@ -12,16 +12,16 @@
 //  - property: name
 //
 // Events are posted to the subscriber's receiver, which is expected to have a 
-// signature resembling this:
-//  - function: ReceiveEvent (sender, event)
+// signature like this:
+//  - function: receiveEvent (source, event, parameter)
 //
 //------------------------------------------------------------------------------
 
 var EventSource = Object.create(null);
 
-EventSource.Init = function (params) {
-    // start by creating an empty subscription list
-    this.subscriptions = [];
+EventSource.init = function (params) {
+    // start by creating an empty subscriber list
+    this.subscribers = [];
 
     // copy some parameters
     COPY_PARAM(name, params);
@@ -29,33 +29,48 @@ EventSource.Init = function (params) {
     return this;
 };
 
-EventSource.Subscribe = function (target, receiver) {
-    // check if the target is already subscribed, if so - bail out
-    if (this.subscriptions.indexOf(target) >= 0) {
-        return null;
+EventSource.findSubscriberTargetIndex = function (subscriber) {
+    for (var i = 0, count = this.subscribers.length; i < count; ++i) {
+        if (this.subscribers[i].subscriber === subscriber) {
+            return i;
+        }
     }
-
-    // add the subscription and return it
-    DEBUGLOG(target.name + " subscribes to " + this.name);
-    var subscription = { "target": target, "receiver": receiver };
-    this.subscriptions.push(subscription);
-    return subscription;
+    return -1;
 };
 
-EventSource.Unsubscribe = function (target) {
-    // the subscriptions array is examined to remove the target
-    // XXX this probably won't work - indexOf is assuming target is not an object
-    var i = this.subscriptions.indexOf(target);
+EventSource.addSubscriber = function (subscriber) {
+    var target = null;
+
+    // check if the subscriber is already subscribed
+    if (this.findSubscriberTargetIndex(subscriber) == -1) {
+        // add the subscriber and return it
+        DEBUGLOG("SOURCE - " + subscriber.name + " subscribes to " + this.name);
+        target = { "subscriber": subscriber };
+        this.subscribers.push(target);
+
+        // tell the subscriber to add this source
+        subscriber.addSource(this);
+    }
+    return target;
+};
+
+EventSource.removeSubscriber = function (subscriber) {
+    // the subscribers array is examined to remove the subscriber
+    var i = this.findSubscriberTargetIndex(subscriber);
     if (i >= 0) {
-        this.subscriptions.splice(i, 1);
+        DEBUGLOG("SOURCE - " + subscriber.name + " unsubscribes from " + this.name);
+        this.subscribers.splice(i, 1);
+
+        // tell the subscriber to remove this source
+        subscriber.removeSource(this);
     }
 };
 
-EventSource.PostEvent = function (event) {
-    for (var i = 0, count = this.subscriptions.length; i < count; ++i) {
-        var subscription = this.subscriptions[i];
-        DEBUGLOG(this.name + " posting " + event + " to " + subscription.target.name);
-        subscription.receiver.apply(subscription.target, [this, event]);
+EventSource.postEvent = function (event, parameter) {
+    for (var i = 0, count = this.subscribers.length; i < count; ++i) {
+        var target = this.subscribers[i];
+        DEBUGLOG("SOURCE - " + this.name + " posting " + event + " to " + target.subscriber.name);
+        target.subscriber.receiveEvent(this, event, parameter);
     }
 };
 

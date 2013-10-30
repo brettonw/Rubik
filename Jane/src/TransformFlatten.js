@@ -1,11 +1,11 @@
 //------------------------------------------------------------------------------
 // filter and transform plugins are javascript objects with a defined interface:
 //  - property: name
-//  - function: HandleRecord (record)
+//  - function: handleRecord (record)
 //  
 //------------------------------------------------------------------------------
-Jane.TransformFlatten = function (base) {
-    var TransformFlatten = Object.create(base, {
+Jane.Transform.Flatten = function (base) {
+    var Flatten = Object.create(base, {
         "name": {
             "value": "Flatten",
             "enumerable": true,
@@ -13,7 +13,11 @@ Jane.TransformFlatten = function (base) {
         }
     });
 
-    TransformFlatten.EnumerateRecord = function (record, into) {
+    Flatten.init = function (params) {
+        return this;
+    };
+
+    Flatten.enumerateRecord = function (record, into) {
         // recursive function on objects
         for (var key in record) {
             if (record.hasOwnProperty(key)) {
@@ -28,13 +32,13 @@ Jane.TransformFlatten = function (base) {
         }
     };
 
-    TransformFlatten.HandleRecord = function (record, readOnly) {
+    Flatten.handleRecord = function (record, writable) {
         // flatten traverses a record and returns a new record with all sub-objects
         // flattened out into a single object
         var into = Object.create(null);
-        this.EnumerateRecord(record, into);
+        this.enumerateRecord(record, into);
         return into;
     };
 
-    return TransformFlatten;
+    return Flatten;
 }(null);

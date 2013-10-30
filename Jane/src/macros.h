@@ -2,7 +2,8 @@
 
 #define MATH_PI				"&pi;"
 
-#define	DEFINE_AS(value)	value : #value
+#define	D(value)			value:value
+#define	D_STRING(value)	value:#value
 #define	COPY_PARAM(paramName, params)											\
 	if (#paramName in params) this[#paramName] = params[#paramName]
 #define	COPY_PARAM_NULL(paramName, params)										\
@@ -12,7 +13,7 @@
 
 #ifdef DEBUG
 #define	DEBUGGER			debugger
-#define	DEBUGLOG(x)			console.log (x)
+#define	DEBUGLOG(x)			if (typeof window.top.console !== "undefined") window.top.console.log (x)
 #else
 #define	DEBUGGER
 #define	DEBUGLOG(x)			
