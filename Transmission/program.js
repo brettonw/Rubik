@@ -7,7 +7,9 @@
 // - Activity level (some people will have more interactions than others, maybe
 //   males in general?
 // - perfect random mixing vs. sweep over every user...
-// - gestation period
+// - gestation/incubation period
+// - non-contagious phases (healed after initial infection, or like HSV in sporadic bursts)
+// - immunity (after catching it once)
 // - dying? withdrawing from population...
 
 // strategies
@@ -25,93 +27,151 @@
 
 // events model transmission rates, affected by the various strategies
 
+var pink = "#FF8080";
 var red = "#800000";
 var gray = "#808080";
 
 // the population
-var populationWidth = 16;
-var populationHeight = 32;
+var populationWidth = 8;
+var populationHeight = 8;
 var populationSize = populationWidth * populationHeight;
 var population;
 var infectedCount = 0;
 
 // the disease parameters
 var transmissibility = 1.0;
+var daysToIncubateMin = 5.0;
+var daysToIncubateMax = 15.0;
 
 // the clock
 var clock = 0;
+var day = 0;
+var clockDisplay;
+var paused = true;
+var individualEventsPerWeek = 2.0;
+var eventsPerDiem = Math.floor (populationSize * (individualEventsPerWeek / 7.0));
+
+var lastPersonA, lastPersonB;
 
 function createPopulation () {
     population = [];
 
     // create all the individuals
     for (var id = 0; id < populationSize; ++id) {
-        var person = {};
-        person.id = id;
-        person.infected = -1;
-        population[id] = person;
+        population[id] = {
+            id: id,
+            infectedDay: -1,
+            contagious: false
+        };
     }
 
     // now seed one of the individuals with disease
     var a = Math.floor (Math.random () * populationSize);
     var personA = population[a];
-    personA.infected = clock;
+    personA.infectedDay = day;
+    personA.contagious = true;
     infectedCount = 1;
 };
 
-// parameters from the last event
-var lastPersonA, lastPersonB;
-
 function conductEvent () {
-    if (infectedCount < populationSize) {
-        // advance the clock and clear the last event info
-        if (++clock > 1) {
-            // denote these people as "active"
-            lastPersonA.link.style.stroke = gray;
-            lastPersonB.link.style.stroke = gray;
-        }
+    // clear the last event info by denoting those persons as "active"
+    lastPersonA.link.style.stroke = gray;
+    lastPersonB.link.style.stroke = gray;
 
-        // randomly pair two individuals from the population
-        var a = Math.floor (Math.random () * populationSize);
-        var b = a;
-        while (b == a) {
-            b = Math.floor (Math.random () * populationSize);
-        }
-        var personA = population[a];
-        var personB = population[b];
+    // randomly pair two individuals from the population
+    var a = Math.floor (Math.random () * populationSize);
+    var b = a;
+    while (b == a) {
+        b = Math.floor (Math.random () * populationSize);
+    }
+    var personA = population[a];
+    var personB = population[b];
 
-        // highlight this pairing
-        personA.link.style.stroke = "yellow";
-        personB.link.style.stroke = "yellow";
+    // highlight this pairing
+    personA.link.style.stroke = "yellow";
+    personB.link.style.stroke = "yellow";
 
-        // now handle the event between these two individuals to see if transmission
-        // occurs, only if just one of them is infected (i.e. we don't consider that
-        // an individual might "get it more" or "get it again")
-        // XXX might want to consider ability to get it again, if it can clear...
-        if ((personA.infected >= 0) != (personB.infected >= 0)) {
-            // if the infections would transfer...
-            if (Math.random () < transmissibility) {
-                ++infectedCount;
+    // now handle the event between these two individuals to see if transmission
+    // occurs, only if just one of them is infected and the other is not
+    if ((personA.contagious && (personB.infectedDay < 0)) ||
+        (personB.contagious && (personA.infectedDay < 0))) {
+        // if the infections would transfer...
+        if (Math.random () < transmissibility) {
+            ++infectedCount;
 
-                // transfer the infection
-                if (personA.infected < 0) {
-                    personA.infected = clock; personA.link.style.fill = red;
-                } else {
-                    personB.infected = clock; personB.link.style.fill = red;
-                }
-
+            // transfer the infection
+            if (personA.infectedDay < 0) {
+                personA.infectedDay = day;
+                personA.link.style.fill = pink;
+            } else {
+                personB.infectedDay = day;
+                personB.link.style.fill = pink;
             }
         }
+    }
 
-        // save this information for the next event
-        lastPersonA = personA;
-        lastPersonB = personB;
+    // save this information for the next event
+    lastPersonA = personA;
+    lastPersonB = personB;
+}
+
+function allInfected () {
+    lastPersonA.link.style.stroke = gray;
+    lastPersonB.link.style.stroke = gray;
+}
+
+function startNewDay () {
+    day = Math.floor (clock / eventsPerDiem);
+
+    // sweep over the population to see if somebody becomes contagious or heals
+    // or dies, or...
+    for (var id = 0; id < populationSize; ++id) {
+        var person = population[id];
+
+        // if the person is infected but not contagious, generate a probability
+        // they will become contagious
+        if ((person.infectedDay >= 0) && (!person.contagious)) {
+            var probability = ((day - person.infectedDay) - daysToIncubateMin) / (daysToIncubateMax - daysToIncubateMin);
+            if (Math.random () < probability) {
+                person.contagious = true;
+                person.link.style.fill = red;
+            }
+        }
+    }
+}
+
+function tick () {
+    if (! paused) {
+        if (infectedCount < populationSize) {
+            // see if it's a new day
+            if ((clock % eventsPerDiem) == 0) {
+                // do things that happen on a per day basis - we do this here to
+                // avoid bias in events
+                startNewDay ();
+            }
+
+            // advance the clock
+            ++clock;
+
+            // conduct an event and loop back @ 30Hz
+            conductEvent ();
+            setTimeout(tick, 33);
+        } else {
+            allInfected ();
+            paused = true;
+        }
+    }
+    clockDisplay.textContent = "Day " + day + " (" + clock + ", " + infectedCount + "/" + populationSize + ")";
+}
+
+function click () {
+    // pause and resume animation
+    if (paused) {
+        paused = false;
+        tick ();
     } else {
-        lastPersonA.link.style.stroke = gray;
-        lastPersonB.link.style.stroke = gray;
         paused = true;
     }
-    clockDisplay.textContent = clock + " (" + infectedCount + "/" + populationSize + ")";
 }
 
 function makeSvg () {
@@ -144,7 +204,7 @@ function makeSvg () {
         rect += "<rect id=\"rect" + id + "\"";
         rect += " x=\"" + x + "\" y=\"" + y + "\"";
         rect += " width=\"" + horizontalSize + "\" height=\"" + verticalSize + "\"";
-        rect += " fill=\"" + ((person.infected >= 0) ? red : "white") + "\"";
+        rect += " fill=\"" + (person.contagious ? red : "white") + "\"";
         rect += " stroke=\"black\" stroke-width=\"0.005\" />"
         svg += rect;
     }
@@ -158,7 +218,6 @@ function makeSvg () {
     return svg;
 }
 
-var clockDisplay;
 function linkSvg () {
     for (var id = 0; id < populationSize; ++id) {
         var person = population[id];
@@ -166,25 +225,13 @@ function linkSvg () {
         person.link = link;
     }
     clockDisplay = document.getElementById ("clockDisplay");
-}
 
-// clock functions
-var paused = true;
-function tick () {
-    if (! paused) {
-        conductEvent ();
-        setTimeout(tick, 20);
-    }
-}
-
-function click () {
-    // pause and resume animation
-    if (paused && (infectedCount < populationSize)) {
-        paused = false;
-        tick ();
-    } else {
-        paused = true;
-    }
+    // create a dummy person to clear status on so that we can remove an "if"
+    // statement from the inner loop (this object will be abandoned very early)
+    lastPersonA = {};
+    lastPersonA.link = {};
+    lastPersonA.link.style = {};
+    lastPersonB = lastPersonA;
 }
 
 function main () {
