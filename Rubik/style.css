@@ -1,0 +1,27 @@
+html, body {
+    background-color:   #000080;
+    width:              100%;
+    height:             100%;
+    padding:            0px;
+    margin:             0px;
+}
+
+div {
+    background-color:   #FF0000;
+    width:              100%;
+    height:             100%;
+    padding:            0;
+    margin:             0;
+    overflow:           hidden;
+    display:            block;
+}
+
+svg {
+    background-color:   #808080;
+    width:              100%;
+    height:             100%;
+    padding:            0;
+    margin:             0;
+
+}
+

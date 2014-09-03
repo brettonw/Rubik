@@ -107,7 +107,7 @@ function makeSvgFace (cube, face, corners) {
 
 function makeSvg (cube) {
     // open the SVG and make the render port work like a mathematical system
-    var svg="<svg viewBox=\"-1.25 -1.25 2.5 2.5\">";
+    var svg="<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\"  viewBox=\"-1.25 -1.25 2.5 2.5\" preserveAspectRatio=\"xMidYMid meet\">";
     svg += "<g transform=\"scale(1, -1)\">";
     
     // 6 points defining 3 faces of a necker cube
