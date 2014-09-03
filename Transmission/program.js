@@ -32,16 +32,18 @@ var red = "#800000";
 var gray = "#808080";
 
 // the population
-var populationWidth = 8;
-var populationHeight = 8;
+var populationWidth = 32;
+var populationHeight = 32;
 var populationSize = populationWidth * populationHeight;
 var population;
 var infectedCount = 0;
 
 // the disease parameters
-var transmissibility = 1.0;
-var daysToIncubateMin = 5.0;
-var daysToIncubateMax = 15.0;
+var transmissibility = 0.5;
+var daysToIncubateMin = 7.0;
+var daysToIncubateMax = 14.0;
+var daysToHealMin = 10.0;
+var daysToHealMax = 21.0;
 
 // the clock
 var clock = 0;
@@ -69,7 +71,7 @@ function createPopulation () {
     var a = Math.floor (Math.random () * populationSize);
     var personA = population[a];
     personA.infectedDay = day;
-    personA.contagious = true;
+    //personA.contagious = true;
     infectedCount = 1;
 };
 
@@ -204,7 +206,7 @@ function makeSvg () {
         rect += "<rect id=\"rect" + id + "\"";
         rect += " x=\"" + x + "\" y=\"" + y + "\"";
         rect += " width=\"" + horizontalSize + "\" height=\"" + verticalSize + "\"";
-        rect += " fill=\"" + (person.contagious ? red : "white") + "\"";
+        rect += " fill=\"" + ((person.infectedDay >= 0) ? pink : "white") + "\"";
         rect += " stroke=\"black\" stroke-width=\"0.005\" />"
         svg += rect;
     }
