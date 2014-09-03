@@ -29,7 +29,7 @@ var red = "#800000";
 var gray = "#808080";
 
 // the population
-var populationWidth = 32;
+var populationWidth = 16;
 var populationHeight = 32;
 var populationSize = populationWidth * populationHeight;
 var population;
