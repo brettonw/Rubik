@@ -1,16 +1,22 @@
 <!doctype html>
-
 <html>
-<head>
-    <title>Symbolic Math - Blackbody</title>
-    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=MML_HTMLorMML"></script>
-    <script type="text/javascript" src="SymbolicMath.js"></script>
-    <script type="text/javascript" src="d3.v3.js" charset="utf-8"></script>
-</head>
-<body onload="initPage();">
-    <script type="text/javascript">
-        function initPage()
-        {
+    <head>
+        <title>Symbolic Math - Blackbody</title>
+        <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/javascript" src="SymbolicMath.js"></script>
+        <script type="text/javascript" src="d3.v3.js" charset="utf-8"></script>
+        <script type="text/javascript">
+    (function () {
+        //  When the renderer changes, ask the MathMenu to change
+        //  the renderer (this way we get any warning messages
+        window.setMathRenderingMode = function (renderer) {
+            MathJax.Hub.config.MathMenu.settings.renderer = renderer;
+            MathJax.Menu.Renderer.call(this);
+        };
+    })()
+        </script>
+        <script type="text/javascript">
+        function initPage() {
             window.setMathRenderingMode("HTML-CSS");
 
             var display = new String();
@@ -18,7 +24,7 @@
             display += "<tr><th>Equation</th></tr>\n<tr>";
 
             //var L = (2 * h * c * c) / (wavelength^5 * (e^((h * c) / (wavelength * k * T)) - 1))
-            var hc2 = SM.Multiply (2.0, "h", "c", "c");
+            var hc2 = SM.Multiply(2.0, "h", "c", "c");
             var exp = SM.Multiply("h", "c").Divide(SM.Multiply("&lambda;", "k", "T"));
             var L = (hc2.Divide(SM.Power("&lambda;", 5).Multiply(SM.Exp(exp).Subtract(1)))).Multiply(1.0e-9);
             /*
@@ -35,30 +41,22 @@
 
 
             // now evaluate the function
-            var sampler = new Sampler ();
+            var sampler = new Sampler();
             sampler.values = {
-                T    : 5777              // Color Temperature - degrees K
+                T: 5777              // Color Temperature - degrees K
             };
             sampler.domain = ["&lambda;", 220.0 * 1.0e-9, 1880 * 1.0e-9];
-            var graphData = sampler.Evaluate (L);
+            var graphData = sampler.Evaluate(L);
 
-            var plot = new Plot ();
+            var plot = new Plot();
             plot.title = "Blackbody Radiation at T=" + sampler.values.T + "ºK";
             plot.xAxisTitle = "\u03BB = Wavelength (nm)";
             plot.yAxisTitle = "Spectral Radiance (W / m² / sr / nm)";
-            plot.FromGraphData (graphData);
+            plot.FromGraphData(graphData);
         }
-    
-        (function () {
-            //  When the renderer changes, ask the MathMenu to change
-            //  the renderer (this way we get any warning messages
-            window.setMathRenderingMode = function (renderer) {
-                MathJax.Hub.config.MathMenu.settings.renderer = renderer;
-                MathJax.Menu.Renderer.call(this);
-            };
-        })()
-    </script> 
-
-    <div id="display">display</div>
-</body>
+        </script>
+    </head>
+    <body onload="initPage();">
+        <div id="display">display</div>
+    </body>
 </html>

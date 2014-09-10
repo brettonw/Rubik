@@ -11,6 +11,7 @@ Power.N = function(values) {
 };
 
 Power.D = function(values) {
+    //var d = SM.Multiply (_EXPONENT, _BASE.Power (_EXPONENT.Subtract(1)), _BASE.D(values));
     var d = _EXPONENT.Multiply (_BASE.Power (_EXPONENT.Subtract(1))).Multiply(_BASE.D(values));
     return d.Simplify ();
 };

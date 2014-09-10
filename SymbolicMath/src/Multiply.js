@@ -35,9 +35,15 @@ Multiply.D = function(values) {
             var term = (i == j) ? this.children[j].D(values) : this.children[j];
             m.Accumulate (term);
         }
+        debug ("m = " + m.toString ());
+        m = m.Simplify ();
+        debug ("m (simplified) = " + m.toString ());
         d.Accumulate (m);
     }
-    return d.Simplify ();
+    debug ("d = " + d.toString ());
+    d = d.Simplify ();
+    debug ("d (simplified) = " + d.toString ());
+    return d;
 };
 
 Multiply.Render = function(enclose) {
@@ -48,7 +54,8 @@ Multiply.Render = function(enclose) {
     for (var i = 1; i < count; ++i)
     {
         // invisible multiplication operator
-        result += "<mo>&#x2062;</mo>" + this.children[i].Render(true);
+        result += "<mo>&#x2009;</mo>" + this.children[i].Render(true);
+        //result += "<mo>&#x2715;</mo>" + this.children[i].Render(true);
     }
     //if (enclose) result += ")";
     return result + "</mrow>";
@@ -127,7 +134,7 @@ Multiply.Simplify = function() {
                 terms[child.variable] = (child.variable in terms) ? (terms[child.variable] + 1) : 1;
                 children.splice (i, 1);
             } else if (child.typename == "Power") {
-                if ((child.children[0].typename == "Variable") AND (child.children[1].typename == "Constant")) {
+                if ((child.children[0].typename == "Variable") AND- (child.children[1].typename == "Constant")) {
                     if (child.children[0].variable in terms) {
                         terms[child.children[0].variable] = terms[child.children[0].variable] + child.children[1].constant;
                     } else {

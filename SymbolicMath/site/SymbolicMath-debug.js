@@ -1,5 +1,3 @@
-
-
 "use strict";
 var Expr = Object.create(null);
 Expr.MakeExpr = function(a) {
@@ -38,7 +36,7 @@ Expr.Multiply = function(a) { return Object.create(Multiply)._init(this, a); };
 Expr.Divide = function(a) { return Object.create(Divide)._init(this, a); };
 Expr.Power = function(a) { return Object.create(Power)._init(this, a); };
 Expr.toString = function() {
-    return this.Render (false);
+    return "<math xmlns=\"http://www.w3.org/1998/Math/MathML\">" + this.Render (false) + "</math>";
 };
 Expr.Simplify = function() {
     return this;
@@ -62,8 +60,14 @@ Constant.N = function(values) {
 Constant.D = function(values) {
     return Object.create(Constant)._init(0);
 };
-Constant.Render = function(enclose) {
-    return this.constant.toString();
+Constant.Render = function (enclose) {
+    var re = /^([^e]*)e?([^e]*)$/;
+    var matched = re.exec(this.constant.toString());
+    var result = "<mn>" + matched[1] + "</mn>";
+    if (matched[2].length > 0) {
+        result += "<mo>&times;</mo><msup><mn>10</mn><mn>" + matched[2] + "</mn></msup>";
+    }
+    return result;
 };
 Constant._init = function() {
     this.constant = arguments[0];
@@ -79,7 +83,7 @@ Variable.D = function(values) {
     return Object.create(Constant)._init((this.variable in values) ? 1 : 0);
 };
 Variable.Render = function(enclose) {
-    return this.variable;
+    return "<mi>" + this.variable + "</mi>";
 };
 Variable._init = function() {
     this.variable = arguments[0];
@@ -108,14 +112,19 @@ Add.D = function(values) {
     return d.Simplify ();
 };
 Add.Render = function(enclose) {
-    var result = new String();
-    if (enclose) result += "(";
+    var result = new String("<mrow>");
+    if (enclose) result += "<mo>(</mo>";
     result += this.children[0].Render(true);
-    for (var i = 1; i < this.children.length; ++i) {
-        result += " + " + this.children[i].Render(true);
+    if ((this.children.length == 2) && (this.children[1].typename == "Constant") && (this.children[1].constant < 0)) {
+        var constant = Object.create(Constant)._init (-this.children[1].constant);
+        result += "<mo>-</mo>" + constant.Render(true);
+    } else {
+        for (var i = 1; i < this.children.length; ++i) {
+            result += "<mo>+</mo>" + this.children[i].Render(true);
+        }
     }
-    if (enclose) result += ")";
-    return result;
+    if (enclose) result += "<mo>)</mo>";
+    return result + "</mrow>";
 };
 Add.Simplify = function() {
     var simplifyChildren = function (children) {
@@ -243,19 +252,25 @@ Multiply.D = function(values) {
             var term = (i == j) ? this.children[j].D(values) : this.children[j];
             m.Accumulate (term);
         }
+        debug ("m = " + m.toString ());
+        m = m.Simplify ();
+        debug ("m (simplified) = " + m.toString ());
         d.Accumulate (m);
     }
-    return d.Simplify ();
+    debug ("d = " + d.toString ());
+    d = d.Simplify ();
+    debug ("d (simplified) = " + d.toString ());
+    return d;
 };
 Multiply.Render = function(enclose) {
-    var result = new String();
+    var result = new String("<mrow>");
     result += this.children[0].Render(true);
     var count = this.children.length;
     for (var i = 1; i < count; ++i)
     {
-        result += " " + this.children[i].Render(true);
+        result += "<mo>&#x2009;</mo>" + this.children[i].Render(true);
     }
-    return result;
+    return result + "</mrow>";
 };
 Multiply.Simplify = function() {
     var simplifyChildren = function (children) {
@@ -365,7 +380,7 @@ Power.D = function(values) {
 };
 Power.Render = function(enclose) {
     var result = new String();
-    result += this.children[0].Render(true) + "<sup>" + this.children[1].Render(true) + "</sup>";
+    result += "<msup>" + this.children[0].Render(true) + " " + this.children[1].Render(true) + "</msup>";
     return result;
 };
 Power.Simplify = function() {
@@ -407,7 +422,7 @@ Sqrt.D = function(values) {
     return d.Simplify ();
 };
 Sqrt.Render = function(enclose) {
-    return "Sqrt (" + this.children[0].Render(false) + ")";
+    return "<msqrt>" + this.children[0].Render(false) + "</msqrt>";
 };
 Sqrt.Simplify = function() {
     var a = this.children[0].Simplify ();
@@ -427,7 +442,7 @@ Divide.D = function(values) {
 };
 Divide.Render = function(enclose) {
     var result = new String();
-    result += this.children[0].Render(true) + " / " + this.children[1].Render(true);
+    result += "<mfrac>" + this.children[0].Render(true) + " " + this.children[1].Render(true) + "</mfrac>";
     return result;
 };
 Divide.Simplify = function() {
@@ -477,7 +492,7 @@ Exp.D = function(values) {
     return d.Simplify ();
 };
 Exp.Render = function(enclose) {
-    return "e<sup>" + this.children[0].Render(false) + "</sup>";
+    return "<msup><mi>e</mi>" + this.children[0].Render(false) + "</msup>";
 };
 var Log = Object.create(Expr, { typename : { value : "Function", writable : false, configurable : false, enumerable : true }});
 Log.N = function(values) {
@@ -717,7 +732,7 @@ function Sampler ()
         var d1 = expr.D (dValues);
     };
 }
-var SM = Object.create (null);
+var SM = Object.create(null);
 SM.Expr = function(a) {
     return Expr.MakeExpr(a);
 };

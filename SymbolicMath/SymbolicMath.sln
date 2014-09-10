@@ -11,6 +11,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "site", "site", "{C41D8DA8-7
 		site\e.html = site\e.html
 		site\gravity.html = site\gravity.html
 		site\index.html = site\index.html
+		site\integration.html = site\integration.html
 		site\sin.html = site\sin.html
 		site\SymbolicMath-debug.js = site\SymbolicMath-debug.js
 		site\SymbolicMath.js = site\SymbolicMath.js

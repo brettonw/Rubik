@@ -14,11 +14,11 @@
 
 // strategies
 // - Ignorance
-// - Abstinence
-// - Monogamy
-// - "Limited" Poly
+// - Abstinence/Avoidance
+// - Monogamy/Partner Preference/"Limited" Poly
 // - Prophylactic use
 // - Selective Partnering based on Testing/Knowledge
+// - self limiting behavior based on self knowledge
 
 // We start with a population of unspecified individuals, and run a clock. At
 // each tick of the clock we conduct an event. An event represents an
@@ -32,8 +32,8 @@ var red = "#800000";
 var gray = "#808080";
 
 // the population
-var populationWidth = 32;
-var populationHeight = 32;
+var populationWidth = 10;
+var populationHeight = 10;
 var populationSize = populationWidth * populationHeight;
 var population;
 var infectedCount = 0;
