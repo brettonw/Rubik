@@ -252,14 +252,14 @@ Multiply.D = function(values) {
             var term = (i == j) ? this.children[j].D(values) : this.children[j];
             m.Accumulate (term);
         }
-        debug ("m = " + m.toString ());
+        debugOut (DEBUG_LEVEL.DBG, "Multiply.D", "m = " + m.toString ());
         m = m.Simplify ();
-        debug ("m (simplified) = " + m.toString ());
+        debugOut (DEBUG_LEVEL.DBG, "Multiply.D", "m (simplified) = " + m.toString ());
         d.Accumulate (m);
     }
-    debug ("d = " + d.toString ());
+    debugOut (DEBUG_LEVEL.DBG, "Multiply.D", "d = " + d.toString ());
     d = d.Simplify ();
-    debug ("d (simplified) = " + d.toString ());
+    debugOut (DEBUG_LEVEL.DBG, "Multiply.D", "d (simplified) = " + d.toString ());
     return d;
 };
 Multiply.Render = function(enclose) {
@@ -328,7 +328,7 @@ Multiply.Simplify = function() {
                 terms[child.variable] = (child.variable in terms) ? (terms[child.variable] + 1) : 1;
                 children.splice (i, 1);
             } else if (child.typename == "Power") {
-                if ((child.children[0].typename == "Variable") && (child.children[1].typename == "Constant")) {
+                if ((child.children[0].typename == "Variable") &&- (child.children[1].typename == "Constant")) {
                     if (child.children[0].variable in terms) {
                         terms[child.children[0].variable] = terms[child.children[0].variable] + child.children[1].constant;
                     } else {
@@ -780,3 +780,13 @@ SM.namedConstants = {
     c : 2.99792458e+08,
     g : 9.80665
 };
+var DEBUG_LEVEL = { TRC: 0, DBG: 1, INF: 2, ERR: 3, SLN: 4 }
+var globalDebugLevel = DEBUG_LEVEL.DBG;
+function debugOut(level, from, msg) {
+    if (level >= globalDebugLevel) {
+        var debugDiv = document.getElementById("debugOut");
+        if (debugDiv != null) {
+            debugDiv.innerHTML += from + ": " + msg + "<br />\n";
+        }
+    }
+}

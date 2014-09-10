@@ -30,6 +30,7 @@
             <fileset dir="${source-dir}" includes="Plot.js" />
             <fileset dir="${source-dir}" includes="Sampler.js" />
             <fileset dir="${source-dir}" includes="SM.js" />
+            <fileset dir="${source-dir}" includes="Debug.js" />
         </concat>
     </target>
 </project>

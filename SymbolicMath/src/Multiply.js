@@ -35,14 +35,14 @@ Multiply.D = function(values) {
             var term = (i == j) ? this.children[j].D(values) : this.children[j];
             m.Accumulate (term);
         }
-        debug ("m = " + m.toString ());
+        debugOut (DEBUG_LEVEL.DBG, "Multiply.D", "m = " + m.toString ());
         m = m.Simplify ();
-        debug ("m (simplified) = " + m.toString ());
+        debugOut (DEBUG_LEVEL.DBG, "Multiply.D", "m (simplified) = " + m.toString ());
         d.Accumulate (m);
     }
-    debug ("d = " + d.toString ());
+    debugOut (DEBUG_LEVEL.DBG, "Multiply.D", "d = " + d.toString ());
     d = d.Simplify ();
-    debug ("d (simplified) = " + d.toString ());
+    debugOut (DEBUG_LEVEL.DBG, "Multiply.D", "d (simplified) = " + d.toString ());
     return d;
 };
 

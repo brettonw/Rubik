@@ -15,12 +15,6 @@
         })()
     </script>
     <script type="text/javascript">
-        function debug(str) {
-            var debugDiv = document.getElementById("debug");
-            debugDiv.innerHTML += "</br>\n" + str;
-        }
-    </script>
-    <script type="text/javascript">
         var values = { x: 4.0, a: 2.0 };
         var display = new String();
         var haltOnFail = false;
@@ -69,6 +63,6 @@
 </head>
 <body onload="initPage();">
     <div id="display">display</div>
-    <div id="debug">Debug</div>
+    <div id="debugOut">Debug Output<br /></div>
 </body>
 </html>
