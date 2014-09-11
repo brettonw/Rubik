@@ -4,7 +4,7 @@ Add.SortArray = function(array) {
     var sortOrder = { Power:1, Multiply:2, Divide:3, Variable:4, Function:5, Constant:6, Add:7 };
     return array.sort (function (left, right) {
         return sortOrder[left.typename] - sortOrder[right.typename];
-    });    
+    });
     return array;
 };
 
@@ -56,8 +56,8 @@ Add.Simplify = function() {
         return simplifiedChildren;
     }
     var newChildren = simplifyChildren (this.children);
-    
-    // if there are any "Add" children, suck them up into this one, 
+
+    // if there are any "Add" children, suck them up into this one,
     // simplified children should guarantee that the Add nodes have no
     // Add children themselves
     var levelAddition = function (children) {
@@ -89,10 +89,10 @@ Add.Simplify = function() {
                 ++i;
             }
         }
-        
+
         // add the constant value
         if (constantValue == 0) {
-            // skip it because adding 0 is redundant, unless 
+            // skip it because adding 0 is redundant, unless
             // there are no other nodes left
             if (children.length == 0) {
                 children.push (EXPR(Constant)(0));
@@ -132,6 +132,7 @@ Add.Simplify = function() {
                         ++i;
                     }
                 } else {
+        debugOut (DEBUG_LEVEL.DBG, "Add.Simplify.collectTerms", "Skipping term");
                     ++i;
                 }
             } else if (child.typename == "Power") {
@@ -145,7 +146,7 @@ Add.Simplify = function() {
                 ++i;
             }
         }
-        
+
         // now process the gathered terms
         for (var term in terms) {
             var termsExp = terms[term];
@@ -156,7 +157,7 @@ Add.Simplify = function() {
             }
         }
     }
-    collectTerms (newChildren);
+    //collectTerms (newChildren);
 
     // if there's only one child, it *is* the result
     if (newChildren.length == 1) {
