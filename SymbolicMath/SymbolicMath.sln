@@ -1,6 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Express 2012 for Web
+# Visual Studio Express 2013 for Web
+VisualStudioVersion = 12.0.30723.0
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "site", "site", "{C41D8DA8-765A-46F6-B787-317327000213}"
 	ProjectSection(SolutionItems) = preProject
 		site\blackbody.html = site\blackbody.html
@@ -15,6 +17,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "site", "site", "{C41D8DA8-7
 		site\sin.html = site\sin.html
 		site\SymbolicMath-debug.js = site\SymbolicMath-debug.js
 		site\SymbolicMath.js = site\SymbolicMath.js
+		site\test-MultiplyDerivative.html = site\test-MultiplyDerivative.html
 		site\test.html = site\test.html
 		site\testMathML.html = site\testMathML.html
 	EndProjectSection
@@ -24,6 +27,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{4285032A-EF1
 		src\Add.js = src\Add.js
 		src\BigNumber.js = src\BigNumber.js
 		src\Constant.js = src\Constant.js
+		src\Debug.js = src\Debug.js
 		src\Divide.js = src\Divide.js
 		src\Expr.js = src\Expr.js
 		src\Logarithm.js = src\Logarithm.js
