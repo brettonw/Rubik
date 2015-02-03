@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.31101.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F51E8CC5-5BFF-41EB-8518-30A366AD4C48}"
+	ProjectSection(SolutionItems) = preProject
+		src\game.js = src\game.js
+		src\ship.js = src\ship.js
+		src\thing.js = src\thing.js
+		src\vector2d.js = src\vector2d.js
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "site", "site", "{3CE4B482-2A76-4F49-BF81-3A1D8447D29E}"
+	ProjectSection(SolutionItems) = preProject
+		site\d3.v2.js = site\d3.v2.js
+		site\d3.v2.min.js = site\d3.v2.min.js
+		site\GameOne-debug.js = site\GameOne-debug.js
+		site\GameOne.js = site\GameOne.js
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

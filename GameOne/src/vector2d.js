@@ -1,12 +1,29 @@
-var Vector2d = Object.create (null);
-Vector2d.Create     = function(a)       { return {x:a[0], y:a[1]}; };
-Vector2d.XY         = function(x, y)    { return {x:x, y:y}; };
-Vector2d.Zero       = function()        { return {x:0.0, y:0.0}; };
-Vector2d.One        = function()        { return {x:1.0, y:1.0}; };
-Vector2d.Add        = function(a, b)    { return this.Create (a.x + b.x, a.y + b.y); };
-Vector2d.Subtract   = function(a, b)    { return this.Create (a.x - b.x, a.y - b.y); };
-Vector2d.Scale      = function(a, b)    { return this.Create (a.x * b, a.y * b); };
-Vector2d.Dot        = function(a, b)    { return (a.x * b.x) + (a.y * b.y); };
-Vector2d.Cross      = function(a, b)    { return (a.x * b.y) - (a.y * b.x); };
-Vector2d.NormSq     = function(a)       { return this.Dot (a, a); };
-Vector2d.Norm       = function(a)       { return Math.sqrt (this.NormSq (a)); };
+var Vector2d = function () {
+    var v2d = Object.create(null);
+
+    var makeVector = function (x, y) {
+        var vector = Object.create(v2d);
+        vector.x = x;
+        vector.y = y;
+        return vector;
+    };
+
+    v2d.make = function (a) { return makeVector(a[0], a[1]); };
+    v2d.xy = function (x, y) { return makeVector(x, y); };
+    v2d.v = function (v) { return makeVector(v.x, v.y); };
+
+    v2d.zero = function () { return makeVector(0, 0); };
+    v2d.one = function () { return makeVector(1, 1); };
+
+    v2d.add = function (b) { return makeVector(this.x + b.x, this.y + b.y); };
+    v2d.subtract = function (b) { return makeVector(this.x - b.x, this.y - b.y); };
+    v2d.scale = function (b) { return makeVector(this.x * b, this.y * b); };
+    v2d.dot = function (b) { return (this.x * b.x) + (this.y * b.y); };
+    v2d.cross = function (b) { return (this.x * b.y) - (this.y * b.x); };
+
+    v2d.normSq = function () { return this.dot(this); };
+    v2d.norm = function () { return Math.sqrt(this.normSq()); };
+    v2d.normalized = function () { return this.Scale(1.0 / this.norm(a)); }
+
+    return v2d;
+}();

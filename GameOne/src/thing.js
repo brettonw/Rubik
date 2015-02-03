@@ -1,98 +1,120 @@
-var Thing = Object.create (null);
+var Thing = function () {
+    var T = Object.create(null);
 
-// rotational parameters of a physical body in 2 dimensions, e.g. it can only 
-// rotate around an axis that is perpendicular to the 2D plane
-Thing.oneOverMoment = 0.0;
-Thing.spinPosition = 0.0;
-Thing.spinVelocity = 0.0;
-Thing.torque = 0.0;
+    T.init = function (name) {
+        this.name = name;
 
-// translational parameters of a physical body in 2 dimensions
-Thing.oneOverMass = 0.0;
-Thing.position = Vector2d.Zero ();
-Thing.velocity = Vector2d.Zero ();
-Thing.force = Vector2d.Zero ();
+        // rotational parameters of a physical body in 2 dimensions, e.g. it can only 
+        // rotate around an axis that is perpendicular to the 2D plane
+        this.moment = 0.0;
+        this.oneOverMoment = 0.0;
+        this.spinPosition = 0.0;
+        this.spinVelocity = 0.0;
+        this.torque = 0.0;
 
-// density of the traveling medium that will be use to impede the movement of
-// the object (think air drag)
-Thing.mediumDensity = -0.05;
+        // translational parameters of a physical body in 2 dimensions
+        this.mass = 0.0;
+        this.oneOverMass = 0.0;
+        this.position = Vector2d.zero();
+        this.velocity = Vector2d.zero();
+        this.force = Vector2d.zero();
 
-Thing.integrate = function(deltaTime) {
-    // compute forces due to viscous drag
-    this.force = Vector2d.Add(this.force, Vector2d.Scale(this.velocity, this.mediumDensity));
-    this.torque = this.torque + (this.spinVelocity * this.viscosity);
-    
-    // compute accelerations from the forces, then clear out the forces
-    var deltaVelocity = Vector2d.Scale(this.force, (this.oneOverMass * deltaTime));
-    this.force = Vector2d.Zero();
-    var deltaSpinVelocity = this.torque * this.oneOverMoment * deltaTime;
-    this.torque = 0.0;
-    
-    // using the midpoint method, compute the position changes
-    this.position = Vector2d.Add(this.position, Vector2d.Scale(Vector2d.Add(Vector2d.Scale(deltaVelocity, 0.5), this.velocity), deltaTime));
-    this.spinPosition = this.spinPosition + (((deltaSpinVelocity * 0.5) + this.spinVelocity) * deltaTime);
-    
-    // update the velocities from the deltas
-    this.velocity = Vector2d.Add(this.velocity, deltaVelocity);
-    this.spinVelocity = this.spinVelocity + deltaSpinVelocity;
+        // density of the traveling medium that will be use to impede the movement of
+        // the object (think air drag)
+        this.mediumDensity = -0.05;
 
-    // keep the spin position in a math friendly range
-    var TWO_PI = MATH.PI * 2;
-	while (this.spinPosition >= TWO_PI)
-		this.spinPosition -= TWO_PI;
-	while (this.spinPosition < 0)
-		this.spinPosition += TWO_PI;
-}
+        return this;
+    }
 
-Thing.applyForce = function(force) {
-    this.force = force;
-}
+    T.integrate = function (deltaTime) {
+        // compute forces due to viscous drag
+        this.force = this.force.add(this.velocity.scale(this.mediumDensity));
+        this.torque = this.torque + (this.spinVelocity * this.mediumDensity);
 
-thing.applyTorque = function(torque) {
-    this.torque = torque;
-}
+        // compute accelerations from the forces, then clear out the forces
+        var deltaVelocity = this.force.scale(this.oneOverMass * deltaTime);
+        this.force = Vector2d.zero();
+        var deltaSpinVelocity = this.torque * (this.oneOverMoment * deltaTime);
+        this.torque = 0.0;
 
-// geometry is used for bounding the object, for collision detection, for drawing,
-// and for creating the visual representation, computed values assume a homo-
-// genous object with geometry centered (the CG is located at the origin)
-Thing.makeBallGeometry = function(radius) {
-    // compute the mass and the moment
-    var mass = Math.PI * radius * radius;
-    var moment = (mass * radius * radius) / 2.0;
-    this.oneOverMass = 1.0 / mass;
-    this.oneOverMoment = 1.0 / moment;
-    
-    this.svg = container.append("circle")
+        // using the midpoint method, compute the position changes
+        this.position = this.position.add((deltaVelocity.scale(0.5).add(this.velocity)).scale(deltaTime));
+        this.spinPosition = this.spinPosition + (((deltaSpinVelocity * 0.5) + this.spinVelocity) * deltaTime);
+
+        // update the velocities from the deltas
+        this.velocity = this.velocity.add(deltaVelocity);
+        this.spinVelocity = this.spinVelocity + deltaSpinVelocity;
+        if (Math.abs(this.spinVelocity) > 0) {
+            this.spinVelocity = (this.spinVelocity / Math.abs(this.spinVelocity)) * Math.min(5, Math.abs(this.spinVelocity));
+        }
+
+        // keep the spin position in a math friendly range
+        var TWO_PI = Math.PI * 2;
+        while (this.spinPosition >= TWO_PI)
+            this.spinPosition -= TWO_PI;
+        while (this.spinPosition < 0)
+            this.spinPosition += TWO_PI;
+    }
+
+    T.applyForce = function (force) {
+        this.force = this.force.add(force);
+    }
+
+    T.applyTorque = function (torque) {
+        this.torque += torque;
+    }
+
+    // geometry is used for bounding the object, for collision detection, for drawing,
+    // and for creating the visual representation, computed values assume a homo-
+    // genous object with geometry centered (the CG is located at the origin)
+    T.makeBallGeometry = function (container, radius) {
+        // compute the mass and the moment
+        this.mass = Math.PI * radius * radius;
+        this.moment = (this.mass * radius * radius) / 2.0;
+        this.oneOverMass = 1.0 / this.mass;
+        this.oneOverMoment = 1.0 / this.moment;
+
+        this.svg = container.append("circle")
+            .attr("stroke-width", 2.0 / scale)
+            .attr("fill", "red")
+            .attr("fill-opacity", "1.0")
+            .attr("stroke", "black")
+            .attr("stroke-opacity", "1.0")
+            .attr("r", radius);
+    };
+
+    T.makePolygonGeometry = function (container, geometry) {
+        var geometry = [
+            Vector2d.xy(0.00, 0.00),
+            Vector2d.xy(-0.05, 0.05),
+            Vector2d.xy(0.10, 0.00),
+            Vector2d.xy(-0.05, -0.05)
+        ];
+        var points = geometry[0].x + "," + geometry[0].y;
+        for (var i = 1; i < geometry.length; ++i) {
+            points += " " + geometry[i].x + "," + geometry[i].y;
+        }
+        this.svg = container.append("polygon")
         .attr("stroke-width", 2.0 / scale)
         .attr("fill", "red")
         .attr("fill-opacity", "1.0")
         .attr("stroke", "black")
         .attr("stroke-opacity", "1.0")
-        .attr("r", radius);
-};
+        .attr("stroke-linejoin", "round")
+        .attr("points", points);
 
-Thing.makePolygonGeometry = function(geometry) {
-    var geometry = [
-        Vector2d.XY ( 0.00, 0.00), 
-        Vector2d.XY (-0.05, 0.05), 
-        Vector2d.XY ( 0.10, 0.00), 
-        Vector2d.XY (-0.05,-0.05)
-    ];
-    var points = geometry[0].x + "," + geometry[0].y;
-    for (var i = 1; i < geometry.length; ++i) {
-        points += " " + geometry[i].x + "," + geometry[i].y;
-    }
-    this.svg = container.append("polygon")
-    .attr("stroke-width", 2.0 / scale)
-    .attr("fill", "red")
-    .attr("fill-opacity", "1.0")
-    .attr("stroke", "black")
-    .attr("stroke-opacity", "1.0")
-    .attr("stroke-linejoin", "round")
-    .attr("points", points);
-};
+        // temporary values
+        var radius = 0.10;
+        this.mass = Math.PI * radius * radius;
+        this.moment = (this.mass * radius * radius) / 2.0;
+        this.oneOverMass = 1.0 / this.mass;
+        this.oneOverMoment = 1.0 / this.moment;
+    };
 
-Thing.update = function(deltaTime) {
-    this.position = Vector2d.XY (this.position.x + (this.velocity.x * deltaTime), this.position.y + (this.velocity.y * deltaTime));
-    this.svg.attr("transform", "translate(" + this.position.x + "," + this.position.y + ") rotate(" + this.orientation + ", 0.0, 0.0)");
-};
+    T.update = function (deltaTime) {
+        this.integrate(deltaTime);
+        this.svg.attr("transform", "translate(" + this.position.x + "," + this.position.y + ") rotate(" + (this.spinPosition * (180.0 / Math.PI)) + ", 0, 0)");
+    };
+
+    return T;
+}();

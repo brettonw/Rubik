@@ -1,57 +1,148 @@
 "use strict";
-var Vector2d = Object.create (null);
-Vector2d.Create = function(a) { return {x:a[0], y:a[1]}; };
-Vector2d.XY = function(x, y) { return {x:x, y:y}; };
-Vector2d.Zero = function() { return {x:0.0, y:0.0}; };
-Vector2d.One = function() { return {x:1.0, y:1.0}; };
-Vector2d.Add = function(a, b) { return this.Create (a.x + b.x, a.y + b.y); };
-Vector2d.Subtract = function(a, b) { return this.Create (a.x - b.x, a.y - b.y); };
-Vector2d.Scale = function(a, b) { return this.Create (a.x * b, a.y * b); };
-Vector2d.Dot = function(a, b) { return (a.x * b.x) + (a.y * b.y); };
-Vector2d.Cross = function(a, b) { return (a.x * b.y) - (a.y * b.x); };
-Vector2d.NormSq = function(a) { return this.Dot (a, a); };
-Vector2d.Norm = function(a) { return Math.sqrt (this.NormSq (a)); };
-var Thing = Object.create (null);
-Thing.orientation = 0.0;
-Thing.angularVelocity = 0.0;
-Thing.position = Vector2d.Zero ();
-Thing.velocity = Vector2d.Zero ();
-Thing.geometry = [
-    Vector2d.XY ( 0.00, 0.00),
-    Vector2d.XY (-0.05, 0.05),
-    Vector2d.XY ( 0.10, 0.00),
-    Vector2d.XY (-0.05,-0.05)
-];
-Thing.mass = 1.0;
-Thing.momentOfInertia = 0.0;
-Thing.makeSvg = function(container) {
-    var points = this.geometry[0].x + "," + this.geometry[0].y;
-    for (var i = 1; i < this.geometry.length; ++i) {
-        points += " " + this.geometry[i].x + "," + this.geometry[i].y;
+var Vector2d = function () {
+    var v2d = Object.create(null);
+    var makeVector = function (x, y) {
+        var vector = Object.create(v2d);
+        vector.x = x;
+        vector.y = y;
+        return vector;
+    };
+    v2d.make = function (a) { return makeVector(a[0], a[1]); };
+    v2d.xy = function (x, y) { return makeVector(x, y); };
+    v2d.v = function (v) { return makeVector(v.x, v.y); };
+    v2d.zero = function () { return makeVector(0, 0); };
+    v2d.one = function () { return makeVector(1, 1); };
+    v2d.add = function (b) { return makeVector(this.x + b.x, this.y + b.y); };
+    v2d.subtract = function (b) { return makeVector(this.x - b.x, this.y - b.y); };
+    v2d.scale = function (b) { return makeVector(this.x * b, this.y * b); };
+    v2d.dot = function (b) { return (this.x * b.x) + (this.y * b.y); };
+    v2d.cross = function (b) { return (this.x * b.y) - (this.y * b.x); };
+    v2d.normSq = function () { return this.dot(this); };
+    v2d.norm = function () { return Math.sqrt(this.normSq()); };
+    v2d.normalized = function () { return this.Scale(1.0 / this.norm(a)); }
+    return v2d;
+}();
+var Thing = function () {
+    var T = Object.create(null);
+    T.init = function (name) {
+        this.name = name;
+        this.moment = 0.0;
+        this.oneOverMoment = 0.0;
+        this.spinPosition = 0.0;
+        this.spinVelocity = 0.0;
+        this.torque = 0.0;
+        this.mass = 0.0;
+        this.oneOverMass = 0.0;
+        this.position = Vector2d.zero();
+        this.velocity = Vector2d.zero();
+        this.force = Vector2d.zero();
+        this.mediumDensity = -0.05;
+        return this;
     }
-    this.svg = container.append("polygon")
-    .attr("stroke-width", 2.0 / scale)
-    .attr("fill", "red")
-    .attr("fill-opacity", "1.0")
-    .attr("stroke", "black")
-    .attr("stroke-opacity", "1.0")
-    .attr("stroke-linejoin", "round")
-    .attr("points", points);
-};
-Thing.update = function(deltaTime) {
-    this.position = Vector2d.XY (this.position.x + (this.velocity.x * deltaTime), this.position.y + (this.velocity.y * deltaTime));
-    this.svg.attr("transform", "translate(" + this.position.x + "," + this.position.y + ") rotate(" + this.orientation + ", 0.0, 0.0)");
-};var Ship = Object.create (Thing);
-Ship.engines = Vector2d.Zero ();
-Ship.update = function(deltaTime) {
-    var orientationRadians = (this.orientation * Math.PI) / 180.0;
-    var accel = 0.01;
-    this.velocity = Vector2d.XY (this.velocity.x + (Math.cos (orientationRadians) * accel * deltaTime), this.velocity.y + (Math.sin (orientationRadians) * accel * deltaTime));
-    this.orientation += 1.0;
-    Object.getPrototypeOf (Ship).update.call (this, deltaTime);
-};
+    T.integrate = function (deltaTime) {
+        this.force = this.force.add(this.velocity.scale(this.mediumDensity));
+        this.torque = this.torque + (this.spinVelocity * this.mediumDensity);
+        var deltaVelocity = this.force.scale(this.oneOverMass * deltaTime);
+        this.force = Vector2d.zero();
+        var deltaSpinVelocity = this.torque * (this.oneOverMoment * deltaTime);
+        this.torque = 0.0;
+        this.position = this.position.add((deltaVelocity.scale(0.5).add(this.velocity)).scale(deltaTime));
+        this.spinPosition = this.spinPosition + (((deltaSpinVelocity * 0.5) + this.spinVelocity) * deltaTime);
+        this.velocity = this.velocity.add(deltaVelocity);
+        this.spinVelocity = this.spinVelocity + deltaSpinVelocity;
+        if (Math.abs(this.spinVelocity) > 0) {
+            this.spinVelocity = (this.spinVelocity / Math.abs(this.spinVelocity)) * Math.min(5, Math.abs(this.spinVelocity));
+        }
+        var TWO_PI = Math.PI * 2;
+        while (this.spinPosition >= TWO_PI)
+            this.spinPosition -= TWO_PI;
+        while (this.spinPosition < 0)
+            this.spinPosition += TWO_PI;
+    }
+    T.applyForce = function (force) {
+        this.force = this.force.add(force);
+    }
+    T.applyTorque = function (torque) {
+        this.torque += torque;
+    }
+    T.makeBallGeometry = function (container, radius) {
+        this.mass = Math.PI * radius * radius;
+        this.moment = (this.mass * radius * radius) / 2.0;
+        this.oneOverMass = 1.0 / this.mass;
+        this.oneOverMoment = 1.0 / this.moment;
+        this.svg = container.append("circle")
+            .attr("stroke-width", 2.0 / scale)
+            .attr("fill", "red")
+            .attr("fill-opacity", "1.0")
+            .attr("stroke", "black")
+            .attr("stroke-opacity", "1.0")
+            .attr("r", radius);
+    };
+    T.makePolygonGeometry = function (container, geometry) {
+        var geometry = [
+            Vector2d.xy(0.00, 0.00),
+            Vector2d.xy(-0.05, 0.05),
+            Vector2d.xy(0.10, 0.00),
+            Vector2d.xy(-0.05, -0.05)
+        ];
+        var points = geometry[0].x + "," + geometry[0].y;
+        for (var i = 1; i < geometry.length; ++i) {
+            points += " " + geometry[i].x + "," + geometry[i].y;
+        }
+        this.svg = container.append("polygon")
+        .attr("stroke-width", 2.0 / scale)
+        .attr("fill", "red")
+        .attr("fill-opacity", "1.0")
+        .attr("stroke", "black")
+        .attr("stroke-opacity", "1.0")
+        .attr("stroke-linejoin", "round")
+        .attr("points", points);
+        var radius = 0.10;
+        this.mass = Math.PI * radius * radius;
+        this.moment = (this.mass * radius * radius) / 2.0;
+        this.oneOverMass = 1.0 / this.mass;
+        this.oneOverMoment = 1.0 / this.moment;
+    };
+    T.update = function (deltaTime) {
+        this.integrate(deltaTime);
+        this.svg.attr("transform", "translate(" + this.position.x + "," + this.position.y + ") rotate(" + (this.spinPosition * (180.0 / Math.PI)) + ", 0, 0)");
+    };
+    return T;
+}();
+var Ship = function () {
+    var S = Object.create(Thing);
+    S.init = function (name) {
+        this.engines = Vector2d.zero();
+        return Object.getPrototypeOf(Ship).init.call(this, name);
+    }
+    S.thrust = function (percent) {
+        var orientationVector = Vector2d.xy(Math.cos(this.spinPosition), Math.sin(this.spinPosition));
+        var forceScale = this.mass * (percent / 100.0);
+        var force = orientationVector.scale(forceScale);
+        this.applyForce(force);
+    }
+    S.rotate = function (percent) {
+        var torqueScale = 0.000000001 * this.moment * (percent / 100.0);
+        this.applyTorque(torqueScale);
+    }
+    return S;
+}();
 var scale = 1.0;
+var upkeydown = false;
+var leftkeydown = false;
+var rightkeydown = false;
 function initPage() {
+    var body = document.body;
+    body.onkeydown = function () {
+        if (event.keyCode == 38) upkeydown = true;
+        if (event.keyCode == 37) leftkeydown = true;
+        if (event.keyCode == 39) rightkeydown = true;
+    }
+    body.onkeyup = function () {
+        if (event.keyCode == 38) upkeydown = false;
+        if (event.keyCode == 37) leftkeydown = false;
+        if (event.keyCode == 39) rightkeydown = false;
+    }
     var target = d3.select("#display");
     var svg = target.append("svg").attr("class", "gameDisplay");
     svg.style("opacity", 1.0e-6)
@@ -107,14 +198,14 @@ function initPage() {
         .attr("y2", function(d) { return d; })
         .attr("stroke", "rgba(0, 0, 0, 0.20)")
         .attr("stroke-width", 1 / scale);
-    var ship = Object.create (Ship);
-    ship.makeSvg (svg);
-    var ship2 = Object.create (Ship);
-    ship2.makeSvg (svg);
-    ship2.position = Vector2d.XY (-0.5, -0.5);
+    var ship = Object.create (Ship).init ("Ship 1");
+    ship.makePolygonGeometry(svg, {});
     var deltaTime = 1.0 / 20.0;
-    var gametimer = setInterval (function () {
-        ship.update (deltaTime);
-        ship2.update (deltaTime);
+    debugger;
+    var gametimer = setInterval(function () {
+        if (upkeydown) { ship.thrust(10); }
+        if (leftkeydown) { ship.rotate(-10); }
+        if (rightkeydown) { ship.rotate(10); }
+        ship.update(deltaTime);
     }, 1000 * deltaTime);
 }

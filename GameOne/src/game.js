@@ -1,6 +1,22 @@
 var scale = 1.0;
 
+var upkeydown = false;
+var leftkeydown = false;
+var rightkeydown = false;
+
 function initPage() {
+    // add a keypress handler to the body
+    var body = document.body;
+    body.onkeydown = function () {
+        if (event.keyCode == 38) upkeydown = true;
+        if (event.keyCode == 37) leftkeydown = true;
+        if (event.keyCode == 39) rightkeydown = true;
+    }
+    body.onkeyup = function () {
+        if (event.keyCode == 38) upkeydown = false;
+        if (event.keyCode == 37) leftkeydown = false;
+        if (event.keyCode == 39) rightkeydown = false;
+    }
     var target = d3.select("#display");
     var svg = target.append("svg").attr("class", "gameDisplay");
         
@@ -72,16 +88,21 @@ function initPage() {
         .attr("stroke", "rgba(0, 0, 0, 0.20)")
         .attr("stroke-width", 1 / scale);
 
-    var ship = Object.create (Ship);
-    ship.makePolygonGeometry (svg);
-    var ship2 = Object.create (Ship);
-    ship2.makeBallGeometry (svg);
-    ship2.position = Vector2d.XY (-0.5, -0.5);
-        
+    var ship = Object.create (Ship).init ("Ship 1");
+    ship.makePolygonGeometry(svg, {});
+    /*
+    var ship2 = Object.create(Ship).init ("Ship 2");
+    ship2.makeBallGeometry (svg, 0.10);
+    ship2.position = Vector2d.xy (-0.5, -0.5);
+        */
     var deltaTime = 1.0 / 20.0;
-    var gametimer = setInterval (function () {
-        ship.update (deltaTime);
-        ship2.update (deltaTime);
+    debugger;
+    var gametimer = setInterval(function () {
+        if (upkeydown) { ship.thrust(10); }
+        if (leftkeydown) { ship.rotate(-10); }
+        if (rightkeydown) { ship.rotate(10); }
+        ship.update(deltaTime);
+        //ship2.update (deltaTime);
     }, 1000 * deltaTime);
     
     
