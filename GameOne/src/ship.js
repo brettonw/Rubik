@@ -16,7 +16,7 @@ var Ship = function () {
     }
 
     S.rotate = function (percent) {
-        var torqueScale = 0.000000001 * this.moment * (percent / 100.0);
+        var torqueScale = this.moment * (percent / 100.0);
         this.applyTorque(torqueScale);
     }
 

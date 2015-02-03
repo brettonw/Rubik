@@ -29,7 +29,7 @@ var Thing = function () {
     T.integrate = function (deltaTime) {
         // compute forces due to viscous drag
         this.force = this.force.add(this.velocity.scale(this.mediumDensity));
-        this.torque = this.torque + (this.spinVelocity * this.mediumDensity);
+        //this.torque = this.torque + (this.spinVelocity * this.mediumDensity);
 
         // compute accelerations from the forces, then clear out the forces
         var deltaVelocity = this.force.scale(this.oneOverMass * deltaTime);
@@ -45,7 +45,8 @@ var Thing = function () {
         this.velocity = this.velocity.add(deltaVelocity);
         this.spinVelocity = this.spinVelocity + deltaSpinVelocity;
         if (Math.abs(this.spinVelocity) > 0) {
-            this.spinVelocity = (this.spinVelocity / Math.abs(this.spinVelocity)) * Math.min(5, Math.abs(this.spinVelocity));
+            var sgn = (this.spinVelocity / Math.abs(this.spinVelocity));
+            this.spinVelocity = sgn * Math.min(5, Math.abs(this.spinVelocity));
         }
 
         // keep the spin position in a math friendly range

@@ -98,9 +98,9 @@ function initPage() {
     var deltaTime = 1.0 / 20.0;
     debugger;
     var gametimer = setInterval(function () {
-        if (upkeydown) { ship.thrust(10); }
-        if (leftkeydown) { ship.rotate(-10); }
-        if (rightkeydown) { ship.rotate(10); }
+        if (upkeydown) { ship.thrust(50); }
+        if (leftkeydown) { ship.rotate(80); }
+        if (rightkeydown) { ship.rotate(-80); }
         ship.update(deltaTime);
         //ship2.update (deltaTime);
     }, 1000 * deltaTime);

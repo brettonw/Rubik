@@ -41,7 +41,6 @@ var Thing = function () {
     }
     T.integrate = function (deltaTime) {
         this.force = this.force.add(this.velocity.scale(this.mediumDensity));
-        this.torque = this.torque + (this.spinVelocity * this.mediumDensity);
         var deltaVelocity = this.force.scale(this.oneOverMass * deltaTime);
         this.force = Vector2d.zero();
         var deltaSpinVelocity = this.torque * (this.oneOverMoment * deltaTime);
@@ -51,7 +50,8 @@ var Thing = function () {
         this.velocity = this.velocity.add(deltaVelocity);
         this.spinVelocity = this.spinVelocity + deltaSpinVelocity;
         if (Math.abs(this.spinVelocity) > 0) {
-            this.spinVelocity = (this.spinVelocity / Math.abs(this.spinVelocity)) * Math.min(5, Math.abs(this.spinVelocity));
+            var sgn = (this.spinVelocity / Math.abs(this.spinVelocity));
+            this.spinVelocity = sgn * Math.min(5, Math.abs(this.spinVelocity));
         }
         var TWO_PI = Math.PI * 2;
         while (this.spinPosition >= TWO_PI)
@@ -122,7 +122,7 @@ var Ship = function () {
         this.applyForce(force);
     }
     S.rotate = function (percent) {
-        var torqueScale = 0.000000001 * this.moment * (percent / 100.0);
+        var torqueScale = this.moment * (percent / 100.0);
         this.applyTorque(torqueScale);
     }
     return S;
@@ -203,9 +203,9 @@ function initPage() {
     var deltaTime = 1.0 / 20.0;
     debugger;
     var gametimer = setInterval(function () {
-        if (upkeydown) { ship.thrust(10); }
-        if (leftkeydown) { ship.rotate(-10); }
-        if (rightkeydown) { ship.rotate(10); }
+        if (upkeydown) { ship.thrust(50); }
+        if (leftkeydown) { ship.rotate(80); }
+        if (rightkeydown) { ship.rotate(-80); }
         ship.update(deltaTime);
     }, 1000 * deltaTime);
 }
