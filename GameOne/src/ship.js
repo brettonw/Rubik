@@ -6,22 +6,20 @@ var Ship = function () {
         Object.getPrototypeOf(Ship).init.call(this, name);
 
         this.engines = Vector2d.zero();
-        this.thrustRatio = 1.0;
+        this.thrustRatio = 10.0;
         this.rotateRatio = 5.0;
 
         return this;
     }
 
     S.thrust = function (percent) {
-        var orientationVector = Vector2d.xy(Math.cos(this.spinPosition), Math.sin(this.spinPosition));
-        var forceScale = this.mass * this.thrustRatio * (percent / 100.0);
-        var force = orientationVector.scale(forceScale);
-        this.applyForce(force);
+        var orientationVector = Vector2d.angle(this.spinPosition);
+        var thrustVector = orientationVector.scale(this.thrustRatio * (percent / 100.0));
+        this.applyAcceleration(thrustVector);
     }
 
     S.rotate = function (percent) {
-        var torqueScale = this.moment * this.rotateRatio * (percent / 100.0);
-        this.applyTorque(torqueScale);
+        this.applySpinAcceleration(this.rotateRatio * (percent / 100.0));
     }
 
     return S;

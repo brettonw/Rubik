@@ -11,6 +11,7 @@ var Vector2d = function () {
     v2d.make = function (a) { return makeVector(a[0], a[1]); };
     v2d.xy = function (x, y) { return makeVector(x, y); };
     v2d.v = function (v) { return makeVector(v.x, v.y); };
+    v2d.angle = function (a) { return makeVector(Math.cos(a), Math.sin(a)); };
 
     v2d.zero = function () { return makeVector(0, 0); };
     v2d.one = function () { return makeVector(1, 1); };

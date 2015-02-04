@@ -6,37 +6,32 @@ var Thing = function () {
 
         // rotational parameters of a physical body in 2 dimensions, e.g. it can only 
         // rotate around an axis that is perpendicular to the 2D plane
-        this.moment = 0.0;
-        this.oneOverMoment = 0.0;
+        this.spinMass = 0.0;
         this.spinPosition = 0.0;
         this.spinVelocity = 0.0;
-        this.torque = 0.0;
+        this.spinForce = 0.0;
+        this.spinDamping = -0.05;
 
         // translational parameters of a physical body in 2 dimensions
         this.mass = 0.0;
-        this.oneOverMass = 0.0;
         this.position = Vector2d.zero();
         this.velocity = Vector2d.zero();
         this.force = Vector2d.zero();
-
-        // density of the traveling medium that will be use to impede the movement of
-        // the object (think air drag)
-        this.translationViscosity = -0.01;
-        this.spinViscosity = -0.025;
+        this.damping = -0.5;
 
         return this;
     }
 
     T.integrate = function (deltaTime) {
-        // compute forces due to viscous drag
-        this.force = this.force.add(this.velocity.scale(this.translationViscosity));
-        this.torque += this.spinVelocity * this.spinViscosity;
+        // compute forces due to viscous damping
+        this.applyAcceleration(this.velocity.scale(this.damping / deltaTime));
+        this.applySpinAcceleration(this.spinVelocity * this.spinDamping / deltaTime);
 
         // compute accelerations from the forces, then clear out the forces
-        var deltaVelocity = this.force.scale(this.oneOverMass * deltaTime);
+        var deltaVelocity = this.force.scale(deltaTime / this.mass);
         this.force = Vector2d.zero();
-        var deltaSpinVelocity = this.torque * (this.oneOverMoment * deltaTime);
-        this.torque = 0.0;
+        var deltaSpinVelocity = this.spinForce * (deltaTime / this.spinMass);
+        this.spinForce = 0.0;
 
         // using the midpoint method, compute the position changes
         this.position = this.position.add((deltaVelocity.scale(0.5).add(this.velocity)).scale(deltaTime));
@@ -62,19 +57,27 @@ var Thing = function () {
         this.force = this.force.add(force);
     }
 
-    T.applyTorque = function (torque) {
-        this.torque += torque;
+    T.applyAcceleration = function (acceleration) {
+        var force = acceleration.scale(this.mass);
+        this.applyForce(force);
+    }
+
+    T.applySpinForce = function (spinForce) {
+        this.spinForce += spinForce;
+    }
+
+    T.applySpinAcceleration = function (spinAcceleration) {
+        var spinForce = spinAcceleration * this.spinMass;
+        this.applySpinForce(spinForce);
     }
 
     // geometry is used for bounding the object, for collision detection, for drawing,
     // and for creating the visual representation, computed values assume a homo-
     // genous object with geometry centered (the CG is located at the origin)
     T.makeBallGeometry = function (container, radius) {
-        // compute the mass and the moment
+        // compute the mass and the spinMass
         this.mass = Math.PI * radius * radius;
-        this.moment = (this.mass * radius * radius) / 2.0;
-        this.oneOverMass = 1.0 / this.mass;
-        this.oneOverMoment = 1.0 / this.moment;
+        this.spinMass = (this.mass * radius * radius) / 2.0;
 
         this.svg = container.append("circle")
             .attr("stroke-width", 2.0 / scale)
@@ -106,11 +109,8 @@ var Thing = function () {
         .attr("points", points);
 
         // temporary values
-        var radius = 0.10;
-        this.mass = Math.PI * radius * radius;
-        this.moment = this.mass;//(this.mass * radius * radius) / 2.0;
-        this.oneOverMass = 1.0 / this.mass;
-        this.oneOverMoment = 1.0 / this.moment;
+        this.mass = 1.0; //Math.PI * radius * radius;
+        this.spinMass = this.mass;//(this.mass * radius * radius) / 2.0;
     };
 
     T.update = function (deltaTime) {
