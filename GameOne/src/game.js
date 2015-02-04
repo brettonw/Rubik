@@ -96,11 +96,18 @@ function initPage() {
     ship2.position = Vector2d.xy (-0.5, -0.5);
         */
     var deltaTime = 1.0 / 20.0;
-    debugger;
+    //debugger;
     var gametimer = setInterval(function () {
-        if (upkeydown) { ship.thrust(50); }
-        if (leftkeydown) { ship.rotate(80); }
-        if (rightkeydown) { ship.rotate(-80); }
+        if (ship.position.y > 0) {
+            ship.applyForce(Vector2d.xy(0, -0.01));
+            ship.translationViscosity = 0;
+        } else {
+            ship.applyForce(Vector2d.xy(0, -ship.position.y));
+            ship.translationViscosity = -0.1;
+        }
+        if (upkeydown) { ship.thrust(75); }
+        if (leftkeydown) { ship.rotate(100); }
+        if (rightkeydown) { ship.rotate(-100); }
         ship.update(deltaTime);
         //ship2.update (deltaTime);
     }, 1000 * deltaTime);

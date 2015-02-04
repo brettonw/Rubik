@@ -21,15 +21,16 @@ var Thing = function () {
 
         // density of the traveling medium that will be use to impede the movement of
         // the object (think air drag)
-        this.mediumDensity = -0.05;
+        this.translationViscosity = -0.01;
+        this.spinViscosity = -0.025;
 
         return this;
     }
 
     T.integrate = function (deltaTime) {
         // compute forces due to viscous drag
-        this.force = this.force.add(this.velocity.scale(this.mediumDensity));
-        //this.torque = this.torque + (this.spinVelocity * this.mediumDensity);
+        this.force = this.force.add(this.velocity.scale(this.translationViscosity));
+        this.torque += this.spinVelocity * this.spinViscosity;
 
         // compute accelerations from the forces, then clear out the forces
         var deltaVelocity = this.force.scale(this.oneOverMass * deltaTime);
@@ -107,7 +108,7 @@ var Thing = function () {
         // temporary values
         var radius = 0.10;
         this.mass = Math.PI * radius * radius;
-        this.moment = (this.mass * radius * radius) / 2.0;
+        this.moment = this.mass;//(this.mass * radius * radius) / 2.0;
         this.oneOverMass = 1.0 / this.mass;
         this.oneOverMoment = 1.0 / this.moment;
     };

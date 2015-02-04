@@ -36,11 +36,13 @@ var Thing = function () {
         this.position = Vector2d.zero();
         this.velocity = Vector2d.zero();
         this.force = Vector2d.zero();
-        this.mediumDensity = -0.05;
+        this.translationViscosity = -0.01;
+        this.spinViscosity = -0.025;
         return this;
     }
     T.integrate = function (deltaTime) {
-        this.force = this.force.add(this.velocity.scale(this.mediumDensity));
+        this.force = this.force.add(this.velocity.scale(this.translationViscosity));
+        this.torque += this.spinVelocity * this.spinViscosity;
         var deltaVelocity = this.force.scale(this.oneOverMass * deltaTime);
         this.force = Vector2d.zero();
         var deltaSpinVelocity = this.torque * (this.oneOverMoment * deltaTime);
@@ -99,7 +101,7 @@ var Thing = function () {
         .attr("points", points);
         var radius = 0.10;
         this.mass = Math.PI * radius * radius;
-        this.moment = (this.mass * radius * radius) / 2.0;
+        this.moment = this.mass;
         this.oneOverMass = 1.0 / this.mass;
         this.oneOverMoment = 1.0 / this.moment;
     };
@@ -112,17 +114,20 @@ var Thing = function () {
 var Ship = function () {
     var S = Object.create(Thing);
     S.init = function (name) {
+        Object.getPrototypeOf(Ship).init.call(this, name);
         this.engines = Vector2d.zero();
-        return Object.getPrototypeOf(Ship).init.call(this, name);
+        this.thrustRatio = 1.0;
+        this.rotateRatio = 5.0;
+        return this;
     }
     S.thrust = function (percent) {
         var orientationVector = Vector2d.xy(Math.cos(this.spinPosition), Math.sin(this.spinPosition));
-        var forceScale = this.mass * (percent / 100.0);
+        var forceScale = this.mass * this.thrustRatio * (percent / 100.0);
         var force = orientationVector.scale(forceScale);
         this.applyForce(force);
     }
     S.rotate = function (percent) {
-        var torqueScale = this.moment * (percent / 100.0);
+        var torqueScale = this.moment * this.rotateRatio * (percent / 100.0);
         this.applyTorque(torqueScale);
     }
     return S;
@@ -201,11 +206,17 @@ function initPage() {
     var ship = Object.create (Ship).init ("Ship 1");
     ship.makePolygonGeometry(svg, {});
     var deltaTime = 1.0 / 20.0;
-    debugger;
     var gametimer = setInterval(function () {
-        if (upkeydown) { ship.thrust(50); }
-        if (leftkeydown) { ship.rotate(80); }
-        if (rightkeydown) { ship.rotate(-80); }
+        if (ship.position.y > 0) {
+            ship.applyForce(Vector2d.xy(0, -0.01));
+            ship.translationViscosity = 0;
+        } else {
+            ship.applyForce(Vector2d.xy(0, -ship.position.y));
+            ship.translationViscosity = -0.1;
+        }
+        if (upkeydown) { ship.thrust(75); }
+        if (leftkeydown) { ship.rotate(100); }
+        if (rightkeydown) { ship.rotate(-100); }
         ship.update(deltaTime);
     }, 1000 * deltaTime);
 }

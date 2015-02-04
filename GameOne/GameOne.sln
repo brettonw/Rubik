@@ -6,6 +6,7 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F51E8CC5-5BFF-41EB-8518-30A366AD4C48}"
 	ProjectSection(SolutionItems) = preProject
 		src\game.js = src\game.js
+		src\macros.h = src\macros.h
 		src\ship.js = src\ship.js
 		src\thing.js = src\thing.js
 		src\vector2d.js = src\vector2d.js
@@ -15,8 +16,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "site", "site", "{3CE4B482-2
 	ProjectSection(SolutionItems) = preProject
 		site\d3.v2.js = site\d3.v2.js
 		site\d3.v2.min.js = site\d3.v2.min.js
-		site\GameOne-debug.js = site\GameOne-debug.js
-		site\GameOne.js = site\GameOne.js
+		site\game.css = site\game.css
+		site\game.html = site\game.html
+		site\index.html = site\index.html
 	EndProjectSection
 EndProject
 Global
