@@ -1,49 +1,37 @@
 var Thing = function () {
-    var T = Object.create(null);
+    var T = Object.create(Particle);
 
     T.init = function (name) {
-        this.name = name;
+        // do the parental thing
+        Object.getPrototypeOf(Thing).init.call(this, name, 1.0, 1.0);
 
         // rotational parameters of a physical body in 2 dimensions, e.g. it can only 
         // rotate around an axis that is perpendicular to the 2D plane
-        this.spinMass = 0.0;
+        this.spinMass = this.mass;
         this.spinPosition = 0.0;
         this.spinVelocity = 0.0;
         this.spinForce = 0.0;
         this.spinDamping = -0.05;
 
-        // translational parameters of a physical body in 2 dimensions
-        this.mass = 0.0;
-        this.position = Vector2d.zero();
-        this.velocity = Vector2d.zero();
-        this.force = Vector2d.zero();
-        this.damping = -0.5;
-
         return this;
     }
 
     T.integrate = function (deltaTime) {
-        // compute forces due to viscous damping
-        this.applyAcceleration(this.velocity.scale(this.damping / deltaTime));
+        // do the parental thing
+        Object.getPrototypeOf(Thing).integrate.call(this, deltaTime);
+
+        // compute force due to damping
         this.applySpinAcceleration(this.spinVelocity * this.spinDamping / deltaTime);
 
-        // compute accelerations from the forces, then clear out the forces
-        var deltaVelocity = this.force.scale(deltaTime / this.mass);
-        this.force = Vector2d.zero();
+        // compute acceleration from the force, then clear out the force
         var deltaSpinVelocity = this.spinForce * (deltaTime / this.spinMass);
         this.spinForce = 0.0;
 
-        // using the midpoint method, compute the position changes
-        this.position = this.position.add((deltaVelocity.scale(0.5).add(this.velocity)).scale(deltaTime));
+        // using the midpoint method, compute the position change
         this.spinPosition = this.spinPosition + (((deltaSpinVelocity * 0.5) + this.spinVelocity) * deltaTime);
 
-        // update the velocities from the deltas
-        this.velocity = this.velocity.add(deltaVelocity);
+        // update the velocity from the delta
         this.spinVelocity = this.spinVelocity + deltaSpinVelocity;
-        if (Math.abs(this.spinVelocity) > 0) {
-            var sgn = (this.spinVelocity / Math.abs(this.spinVelocity));
-            this.spinVelocity = sgn * Math.min(5, Math.abs(this.spinVelocity));
-        }
 
         // keep the spin position in a math friendly range
         var TWO_PI = Math.PI * 2;
@@ -51,15 +39,6 @@ var Thing = function () {
             this.spinPosition -= TWO_PI;
         while (this.spinPosition < 0)
             this.spinPosition += TWO_PI;
-    }
-
-    T.applyForce = function (force) {
-        this.force = this.force.add(force);
-    }
-
-    T.applyAcceleration = function (acceleration) {
-        var force = acceleration.scale(this.mass);
-        this.applyForce(force);
     }
 
     T.applySpinForce = function (spinForce) {
@@ -71,24 +50,7 @@ var Thing = function () {
         this.applySpinForce(spinForce);
     }
 
-    // geometry is used for bounding the object, for collision detection, for drawing,
-    // and for creating the visual representation, computed values assume a homo-
-    // genous object with geometry centered (the CG is located at the origin)
-    T.makeBallGeometry = function (container, radius) {
-        // compute the mass and the spinMass
-        this.mass = Math.PI * radius * radius;
-        this.spinMass = (this.mass * radius * radius) / 2.0;
-
-        this.svg = container.append("circle")
-            .attr("stroke-width", 2.0 / scale)
-            .attr("fill", "red")
-            .attr("fill-opacity", "1.0")
-            .attr("stroke", "black")
-            .attr("stroke-opacity", "1.0")
-            .attr("r", radius);
-    };
-
-    T.makePolygonGeometry = function (container, geometry) {
+    T.makeGeometry = function (container) {
         var geometry = [
             Vector2d.xy(0.00, 0.00),
             Vector2d.xy(-0.05, 0.05),
@@ -107,10 +69,6 @@ var Thing = function () {
         .attr("stroke-opacity", "1.0")
         .attr("stroke-linejoin", "round")
         .attr("points", points);
-
-        // temporary values
-        this.mass = 1.0; //Math.PI * radius * radius;
-        this.spinMass = this.mass;//(this.mass * radius * radius) / 2.0;
     };
 
     T.update = function (deltaTime) {

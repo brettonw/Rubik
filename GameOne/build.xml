@@ -1,7 +1,7 @@
 <project name="GameOne" default="rel" basedir=".">
     <description> Build file for GameOne JavaScript project </description>
     <property name="build-tools-dir" value="../BuildTools"/>
-  	<import file="${build-tools-dir}/common-build.xml"/>
+    <import file="${build-tools-dir}/common-build.xml"/>
 
     <property name="source-dir" value="src"/>
     <property name="build-dir" value="build"/>
@@ -17,6 +17,7 @@
             <!-- file order is important -->
             <fileset dir="${source-dir}" includes="macros.h" />
             <fileset dir="${source-dir}" includes="vector2d.js" />
+            <fileset dir="${source-dir}" includes="particle.js" />
             <fileset dir="${source-dir}" includes="thing.js" />
             <fileset dir="${source-dir}" includes="ship.js" />
             <fileset dir="${source-dir}" includes="game.js" />

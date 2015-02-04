@@ -23,49 +23,70 @@ var Vector2d = function () {
     v2d.normalized = function () { return this.Scale(1.0 / this.norm(a)); }
     return v2d;
 }();
-var Thing = function () {
-    var T = Object.create(null);
-    T.init = function (name) {
+var Particle = function () {
+    var P = Object.create(null);
+    P.init = function (name, radius, density) {
         this.name = name;
-        this.spinMass = 0.0;
-        this.spinPosition = 0.0;
-        this.spinVelocity = 0.0;
-        this.spinForce = 0.0;
-        this.spinDamping = -0.05;
-        this.mass = 0.0;
+        this.radius = radius;
+        this.mass = Math.PI * radius * radius * density;
         this.position = Vector2d.zero();
         this.velocity = Vector2d.zero();
         this.force = Vector2d.zero();
         this.damping = -0.5;
         return this;
     }
-    T.integrate = function (deltaTime) {
+    P.integrate = function (deltaTime) {
         this.applyAcceleration(this.velocity.scale(this.damping / deltaTime));
-        this.applySpinAcceleration(this.spinVelocity * this.spinDamping / deltaTime);
         var deltaVelocity = this.force.scale(deltaTime / this.mass);
         this.force = Vector2d.zero();
+        this.position = this.position.add((deltaVelocity.scale(0.5).add(this.velocity)).scale(deltaTime));
+        this.velocity = this.velocity.add(deltaVelocity);
+    }
+    P.applyForce = function (force) {
+        this.force = this.force.add(force);
+    }
+    P.applyAcceleration = function (acceleration) {
+        var force = acceleration.scale(this.mass);
+        this.applyForce(force);
+    }
+    P.makeGeometry = function (container) {
+        this.svg = container.append("circle")
+            .attr("stroke-width", 2.0 / scale)
+            .attr("fill", "red")
+            .attr("fill-opacity", "1.0")
+            .attr("stroke", "black")
+            .attr("stroke-opacity", "1.0")
+            .attr("r", this.radius);
+    };
+    P.update = function (deltaTime) {
+        this.integrate(deltaTime);
+        this.svg.attr("transform", "translate(" + this.position.x + "," + this.position.y + ")");
+    };
+    return P;
+}();
+var Thing = function () {
+    var T = Object.create(Particle);
+    T.init = function (name) {
+        Object.getPrototypeOf(Thing).init.call(this, name, 1.0, 1.0);
+        this.spinMass = this.mass;
+        this.spinPosition = 0.0;
+        this.spinVelocity = 0.0;
+        this.spinForce = 0.0;
+        this.spinDamping = -0.05;
+        return this;
+    }
+    T.integrate = function (deltaTime) {
+        Object.getPrototypeOf(Thing).integrate.call(this, deltaTime);
+        this.applySpinAcceleration(this.spinVelocity * this.spinDamping / deltaTime);
         var deltaSpinVelocity = this.spinForce * (deltaTime / this.spinMass);
         this.spinForce = 0.0;
-        this.position = this.position.add((deltaVelocity.scale(0.5).add(this.velocity)).scale(deltaTime));
         this.spinPosition = this.spinPosition + (((deltaSpinVelocity * 0.5) + this.spinVelocity) * deltaTime);
-        this.velocity = this.velocity.add(deltaVelocity);
         this.spinVelocity = this.spinVelocity + deltaSpinVelocity;
-        if (Math.abs(this.spinVelocity) > 0) {
-            var sgn = (this.spinVelocity / Math.abs(this.spinVelocity));
-            this.spinVelocity = sgn * Math.min(5, Math.abs(this.spinVelocity));
-        }
         var TWO_PI = Math.PI * 2;
         while (this.spinPosition >= TWO_PI)
             this.spinPosition -= TWO_PI;
         while (this.spinPosition < 0)
             this.spinPosition += TWO_PI;
-    }
-    T.applyForce = function (force) {
-        this.force = this.force.add(force);
-    }
-    T.applyAcceleration = function (acceleration) {
-        var force = acceleration.scale(this.mass);
-        this.applyForce(force);
     }
     T.applySpinForce = function (spinForce) {
         this.spinForce += spinForce;
@@ -74,18 +95,7 @@ var Thing = function () {
         var spinForce = spinAcceleration * this.spinMass;
         this.applySpinForce(spinForce);
     }
-    T.makeBallGeometry = function (container, radius) {
-        this.mass = Math.PI * radius * radius;
-        this.spinMass = (this.mass * radius * radius) / 2.0;
-        this.svg = container.append("circle")
-            .attr("stroke-width", 2.0 / scale)
-            .attr("fill", "red")
-            .attr("fill-opacity", "1.0")
-            .attr("stroke", "black")
-            .attr("stroke-opacity", "1.0")
-            .attr("r", radius);
-    };
-    T.makePolygonGeometry = function (container, geometry) {
+    T.makeGeometry = function (container) {
         var geometry = [
             Vector2d.xy(0.00, 0.00),
             Vector2d.xy(-0.05, 0.05),
@@ -104,8 +114,6 @@ var Thing = function () {
         .attr("stroke-opacity", "1.0")
         .attr("stroke-linejoin", "round")
         .attr("points", points);
-        this.mass = 1.0;
-        this.spinMass = this.mass;
     };
     T.update = function (deltaTime) {
         this.integrate(deltaTime);
@@ -204,7 +212,7 @@ function initPage() {
         .attr("stroke", "rgba(0, 0, 0, 0.20)")
         .attr("stroke-width", 1 / scale);
     var ship = Object.create (Ship).init ("Ship 1");
-    ship.makePolygonGeometry(svg, {});
+    ship.makeGeometry(svg);
     var deltaTime = 1.0 / 20.0;
     var gametimer = setInterval(function () {
         if (ship.position.y > 0) {

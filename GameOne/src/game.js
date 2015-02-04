@@ -89,7 +89,7 @@ function initPage() {
         .attr("stroke-width", 1 / scale);
 
     var ship = Object.create (Ship).init ("Ship 1");
-    ship.makePolygonGeometry(svg, {});
+    ship.makeGeometry(svg);
     /*
     var ship2 = Object.create(Ship).init ("Ship 2");
     ship2.makeBallGeometry (svg, 0.10);
