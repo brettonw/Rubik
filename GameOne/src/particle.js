@@ -1,22 +1,22 @@
 var Particle = function () {
     var P = Object.create(null);
 
-    P.init = function (name, radius, density) {
+    P.init = function (name, position, radius, density) {
         this.name = name;
 
         // parameters of a physical body in 2 dimensions
         this.radius = radius;
         this.mass = Math.PI * radius * radius * density;
-        this.position = Vector2d.zero();
+        this.position = position;
         this.velocity = Vector2d.zero();
         this.force = Vector2d.zero();
-        this.damping = -0.5;
+        this.damping = -0.1;
 
         return this;
     }
 
     P.integrate = function (deltaTime) {
-        // compute force due to damping, this is computed on a frame by frame 
+        // compute force due to damping, this is computed on a frame by frame
         // basis, as opposed to over some time period (like 1 second)
         this.applyAcceleration(this.velocity.scale(this.damping / deltaTime));
 
@@ -51,6 +51,8 @@ var Particle = function () {
             .attr("stroke", "black")
             .attr("stroke-opacity", "1.0")
             .attr("r", this.radius);
+
+        return this;
     };
 
     P.update = function (deltaTime) {

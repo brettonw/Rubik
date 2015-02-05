@@ -1,14 +1,14 @@
 var Thing = function () {
     var T = Object.create(Particle);
 
-    T.init = function (name) {
+    T.init = function (name, position, spinPosition) {
         // do the parental thing
-        Object.getPrototypeOf(Thing).init.call(this, name, 1.0, 1.0);
+        Object.getPrototypeOf(Thing).init.call(this, name, position, 1.0, 1.0);
 
-        // rotational parameters of a physical body in 2 dimensions, e.g. it can only 
+        // rotational parameters of a physical body in 2 dimensions, e.g. it can only
         // rotate around an axis that is perpendicular to the 2D plane
         this.spinMass = this.mass;
-        this.spinPosition = 0.0;
+        this.spinPosition = spinPosition;
         this.spinVelocity = 0.0;
         this.spinForce = 0.0;
         this.spinDamping = -0.05;
@@ -57,9 +57,9 @@ var Thing = function () {
             Vector2d.xy(0.10, 0.00),
             Vector2d.xy(-0.05, -0.05)
         ];
-        var points = geometry[0].x + "," + geometry[0].y;
+        var points = geometry[0].toString ();
         for (var i = 1; i < geometry.length; ++i) {
-            points += " " + geometry[i].x + "," + geometry[i].y;
+            points += " " + geometry[i].toString ();
         }
         this.svg = container.append("polygon")
         .attr("stroke-width", 2.0 / scale)
@@ -69,6 +69,8 @@ var Thing = function () {
         .attr("stroke-opacity", "1.0")
         .attr("stroke-linejoin", "round")
         .attr("points", points);
+
+        return this;
     };
 
     T.update = function (deltaTime) {

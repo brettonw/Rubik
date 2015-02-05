@@ -19,13 +19,13 @@ function initPage() {
     }
     var target = d3.select("#display");
     var svg = target.append("svg").attr("class", "gameDisplay");
-        
+
     // fade the display in
     svg.style("opacity", 1.0e-6)
         .transition().duration(1000)
         .style("opacity", 1.0);
-        
-    // add a background object so the base transform handler will always receive 
+
+    // add a background object so the base transform handler will always receive
     // the pan and zoom interactions
     svg.append("rect")
         .attr("class", "gameBackground")
@@ -41,23 +41,23 @@ function initPage() {
         .on("zoom", function() {
             child
                 //.transition().duration(100)
-                .attr("transform", 
-                    "translate(" + d3.event.translate[0] + "," +  d3.event.translate[1] + ") " + 
+                .attr("transform",
+                    "translate(" + d3.event.translate[0] + "," +  d3.event.translate[1] + ") " +
                     "scale(" +  d3.event.scale + ")"
                 );
         })
     );
-    
+
     // create a child g element to receive the universe transform (invert y and scale the view to [0..1, 0..1])
     svg = child.append("g").attr("class", "gameDisplay");
     var xScale = target[0][0].clientWidth;
     var yScale = target[0][0].clientHeight;
     scale = Math.min (xScale, yScale);
     svg.attr ("transform", "translate(" + (xScale / 2.0) + "," + (yScale / 2.0) + ") scale(" + scale + "," + -scale + ")");
-    
+
     // create a child g element to contain the world
     svg = svg.append("g").attr("class", "gameDisplay");
-    
+
     // add a grid
     var gridLines = [0.0];
     var gridMin;
@@ -88,16 +88,13 @@ function initPage() {
         .attr("stroke", "rgba(0, 0, 0, 0.20)")
         .attr("stroke-width", 1 / scale);
 
-    var ship = Object.create (Ship).init ("Ship 1");
-    ship.makeGeometry(svg);
-    /*
-    var ship2 = Object.create(Ship).init ("Ship 2");
-    ship2.makeBallGeometry (svg, 0.10);
-    ship2.position = Vector2d.xy (-0.5, -0.5);
-        */
+    //var ship = Object.create (Ship).init ("Ship 1", Vector2d.zero(), Math.PI / 2.0);
+    var ship = Object.create (Cluster).init ("Ship 1").makeGeometry(svg);
+    ship
     var deltaTime = 1.0 / 20.0;
     //debugger;
     var gametimer = setInterval(function () {
+    /*
         if (ship.position.y > 0) {
             ship.applyAcceleration(Vector2d.xy(0, -9.8));
             ship.damping = -0.01;
@@ -110,11 +107,19 @@ function initPage() {
         if (upkeydown) { ship.thrust(100); }
         if (leftkeydown) { ship.rotate(100); }
         if (rightkeydown) { ship.rotate(-100); }
+        */
+        var    o = Vector2d.angle(ship.spinPosition);
+        if (leftkeydown) {
+            ship.particles[0].applyAcceleration(o);
+        }
+        if (rightkeydown) {
+            ship.particles[1].applyAcceleration(o);
+        }
+
         ship.update(deltaTime);
-        //ship2.update (deltaTime);
     }, 1000 * deltaTime);
-    
-    
+
+
     // need a pause time button
 }
 

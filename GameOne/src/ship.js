@@ -1,13 +1,12 @@
 var Ship = function () {
     var S = Object.create(Thing);
 
-    S.init = function (name) {
+    S.init = function (name, position, spinPosition) {
         // do the parental thing
-        Object.getPrototypeOf(Ship).init.call(this, name);
+        Object.getPrototypeOf(Ship).init.call(this, name, position, spinPosition);
 
-        this.engines = Vector2d.zero();
         this.thrustRatio = 10.0;
-        this.rotateRatio = 5.0;
+        this.rotateRatio = 10.0;
 
         return this;
     }
