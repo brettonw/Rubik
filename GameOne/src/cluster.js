@@ -29,7 +29,7 @@ var Cluster = function () {
         var particle = function (i) {
             var r = 0.01, d = 300;
             var p = Object.create(Particle).init (name + "-" + i, points[i], r, d);
-            p.damping = 0;//-0.01;
+            p.damping = 0;//-0.001;
             return p;
         }
         this.particles = [ particle (0), particle (1), particle (2) ];
@@ -82,14 +82,23 @@ var Cluster = function () {
                 var d = delta.normalize ();
 
                 // compute the relative velocity damping to apply
+                // XXX this should be relative to dt and mass, I think
                 var relativeVelocity = a.velocity.subtract(b.velocity);
                 var springVelocity = relativeVelocity.dot (delta);
-                var velocityDampingForce = 0.5 * springVelocity;
+                var velocityDampingForce = 0.5 * 0.5 * springVelocity * (a.mass + b.mass) / dT;
 
                 // apply a spring force to make d be equal to constraint.d,
                 // using Hooke's law
                 var x = d - constraint.d;
                 var k = 0.5;
+
+                /*
+                var xd = x * 0.5;
+                var xv = xd * 0.5;
+                var fx = ((a.mass * xv) / dT) * ((Math.abs(x / constraint.d) > 0.25) ? 2.0 : 1.0);
+                */
+
+                var Fspring = 0.5 * 0.5 * 0.5 * 2.0 * x * (a.mass + b.mass) / (deltaTime * deltaTime);
                 var F = (k * x) + velocityDampingForce;
                 a.applyForce (delta.scale (-F));
                 b.applyForce (delta.scale (F))

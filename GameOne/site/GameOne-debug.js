@@ -188,14 +188,23 @@ var Cluster = function () {
                 var d = delta.normalize ();
 
 
+
                 var relativeVelocity = a.velocity.subtract(b.velocity);
                 var springVelocity = relativeVelocity.dot (delta);
-                var velocityDampingForce = 0.5 * springVelocity;
+                var velocityDampingForce = 0.5 * 0.5 * springVelocity * (a.mass + b.mass) / dT;
 
 
 
                 var x = d - constraint.d;
                 var k = 0.5;
+
+
+
+
+
+
+
+                var Fspring = 0.5 * 0.5 * 0.5 * 2.0 * x * (a.mass + b.mass) / (deltaTime * deltaTime);
                 var F = (k * x) + velocityDampingForce;
                 a.applyForce (delta.scale (-F));
                 b.applyForce (delta.scale (F))
