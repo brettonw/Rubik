@@ -1,7 +1,7 @@
 var Thing = function () {
-    var T = Object.create(Particle);
+    var _ = Object.create(Particle);
 
-    T.init = function (name, position, spinPosition) {
+    _.init = function (name, position, spinPosition) {
         // do the parental thing
         Object.getPrototypeOf(Thing).init.call(this, name, position, 1.0, 1.0);
 
@@ -16,41 +16,19 @@ var Thing = function () {
         return this;
     }
 
-    T.integrate = function (deltaTime) {
-        // do the parental thing
-        Object.getPrototypeOf(Thing).integrate.call(this, deltaTime);
-
-        // compute force due to damping
-        this.applySpinAcceleration(this.spinVelocity * this.spinDamping / deltaTime);
-
-        // compute acceleration from the force, then clear out the force
-        var deltaSpinVelocity = this.spinForce * (deltaTime / this.spinMass);
-        this.spinForce = 0.0;
-
-        // using the midpoint method, compute the position change
-        this.spinPosition = this.spinPosition + (((deltaSpinVelocity * 0.5) + this.spinVelocity) * deltaTime);
-
-        // update the velocity from the delta
-        this.spinVelocity = this.spinVelocity + deltaSpinVelocity;
-
-        // keep the spin position in a math friendly range
-        var TWO_PI = Math.PI * 2;
-        while (this.spinPosition >= TWO_PI)
-            this.spinPosition -= TWO_PI;
-        while (this.spinPosition < 0)
-            this.spinPosition += TWO_PI;
+    _.integrate = function (deltaTime) {
     }
 
-    T.applySpinForce = function (spinForce) {
+    _.applySpinForce = function (spinForce) {
         this.spinForce += spinForce;
     }
 
-    T.applySpinAcceleration = function (spinAcceleration) {
+    _.applySpinAcceleration = function (spinAcceleration) {
         var spinForce = spinAcceleration * this.spinMass;
         this.applySpinForce(spinForce);
     }
 
-    T.makeGeometry = function (container) {
+    _.makeGeometry = function (container) {
         var geometry = [
             Vector2d.xy(0.00, 0.00),
             Vector2d.xy(-0.05, 0.05),
@@ -73,10 +51,34 @@ var Thing = function () {
         return this;
     };
 
-    T.update = function (deltaTime) {
-        this.integrate(deltaTime);
-        this.svg.attr("transform", "translate(" + this.position.x + "," + this.position.y + ") rotate(" + (this.spinPosition * (180.0 / Math.PI)) + ", 0, 0)");
+    _.update = function (deltaTime) {
+        // do the parental thing
+        Object.getPrototypeOf(Thing).update.call(this, deltaTime);
+
+        // compute force due to damping
+        this.applySpinAcceleration(this.spinVelocity * this.spinDamping / deltaTime);
+
+        // compute acceleration from the force, then clear out the force
+        var deltaSpinVelocity = this.spinForce * (deltaTime / this.spinMass);
+        this.spinForce = 0.0;
+
+        // using the midpoint method, compute the position change
+        this.spinPosition = this.spinPosition + (((deltaSpinVelocity * 0.5) + this.spinVelocity) * deltaTime);
+
+        // update the velocity from the delta
+        this.spinVelocity = this.spinVelocity + deltaSpinVelocity;
+
+        // keep the spin position in a math friendly range
+        var TWO_PI = Math.PI * 2;
+        while (this.spinPosition >= TWO_PI)
+            this.spinPosition -= TWO_PI;
+        while (this.spinPosition < 0)
+            this.spinPosition += TWO_PI;
     };
 
-    return T;
+    _.paint = function () {
+        this.svg.attr("transform", "translate(" + this.position.x + "," + this.position.y + ") rotate(" + (this.spinPosition * (180.0 / Math.PI)) + ", 0, 0)");
+    }
+
+    return _;
 }();

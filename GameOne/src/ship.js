@@ -1,7 +1,7 @@
 var Ship = function () {
-    var S = Object.create(Thing);
+    var _ = Object.create(Thing);
 
-    S.init = function (name, position, spinPosition) {
+    _.init = function (name, position, spinPosition) {
         // do the parental thing
         Object.getPrototypeOf(Ship).init.call(this, name, position, spinPosition);
 
@@ -11,15 +11,15 @@ var Ship = function () {
         return this;
     }
 
-    S.thrust = function (percent) {
+    _.thrust = function (percent) {
         var orientationVector = Vector2d.angle(this.spinPosition);
         var thrustVector = orientationVector.scale(this.thrustRatio * (percent / 100.0));
         this.applyAcceleration(thrustVector);
     }
 
-    S.rotate = function (percent) {
+    _.rotate = function (percent) {
         this.applySpinAcceleration(this.rotateRatio * (percent / 100.0));
     }
 
-    return S;
+    return _;
 }();

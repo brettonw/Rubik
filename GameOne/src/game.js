@@ -1,21 +1,24 @@
 var scale = 1.0;
 
-var upkeydown = false;
 var leftkeydown = false;
+var upkeydown = false;
 var rightkeydown = false;
+var downkeydown = false;
 
 function initPage() {
     // add a keypress handler to the body
     var body = document.body;
     body.onkeydown = function () {
-        if (event.keyCode == 38) upkeydown = true;
         if (event.keyCode == 37) leftkeydown = true;
+        if (event.keyCode == 38) upkeydown = true;
         if (event.keyCode == 39) rightkeydown = true;
+        if (event.keyCode == 40) downkeydown = true;
     }
     body.onkeyup = function () {
-        if (event.keyCode == 38) upkeydown = false;
         if (event.keyCode == 37) leftkeydown = false;
+        if (event.keyCode == 38) upkeydown = false;
         if (event.keyCode == 39) rightkeydown = false;
+        if (event.keyCode == 40) downkeydown = false;
     }
     var target = d3.select("#display");
     var svg = target.append("svg").attr("class", "gameDisplay");
@@ -108,15 +111,27 @@ function initPage() {
         if (leftkeydown) { ship.rotate(100); }
         if (rightkeydown) { ship.rotate(-100); }
         */
-        var    o = Vector2d.angle(ship.spinPosition);
-        if (leftkeydown) {
+        var o = Vector2d.angle(ship.spinPosition);
+        if (upkeydown) {
             ship.particles[0].applyAcceleration(o);
+            ship.particles[1].applyAcceleration(o);
+        }
+        if (downkeydown) {
+            o = o.scale(-0.5);
+            ship.particles[0].applyAcceleration(o);
+            ship.particles[1].applyAcceleration(o);
         }
         if (rightkeydown) {
+            ship.particles[0].applyAcceleration(o);
+            ship.particles[1].applyAcceleration(o.scale(-1));
+        }
+        if (leftkeydown) {
+            ship.particles[0].applyAcceleration(o.scale(-1));
             ship.particles[1].applyAcceleration(o);
         }
 
         ship.update(deltaTime);
+        ship.paint();
     }, 1000 * deltaTime);
 
 
