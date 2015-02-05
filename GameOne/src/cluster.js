@@ -29,7 +29,7 @@ var Cluster = function () {
         var particle = function (i) {
             var r = 0.01, d = 300;
             var p = Object.create(Particle).init (name + "-" + i, points[i], r, d);
-            p.damping = -0.01;
+            p.damping = 0;//-0.01;
             return p;
         }
         this.particles = [ particle (0), particle (1), particle (2) ];
@@ -95,9 +95,12 @@ var Cluster = function () {
                 bBody->ApplyForce (F * delta);
                 */
 
+                var relativeVelocity = a.velocity.subtract(b.velocity);
+                var springVelocity = relativeVelocity.dot (delta);
+
                 var x = d - constraint.d;
                 var k = subSteps * 0.5;
-                var F = k * x;
+                var F = (k * x) + (0.5 * springVelocity);
                 a.applyForce (delta.scale (-F));
                 b.applyForce (delta.scale (F))
             }
