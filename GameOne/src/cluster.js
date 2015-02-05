@@ -81,33 +81,23 @@ var Cluster = function () {
                 var delta = a.position.subtract (b.position);
                 var d = delta.normalize ();
 
-                // apply a spring force to make d be equal to constraint.d,
-                // using Hooke's law
-                /*
-                Body	    *aBody = a->GetBody (),
-                            *bBody = b->GetBody ();
-                Vector_2d	delta = aBody->TLocation () - bBody->TLocation (),
-                            relVel = aBody->TVelocity () - bBody->TVelocity ();
-                Real		deviation = delta.Normalize () - length,
-                            velocity = relVel | delta,
-                            F = (spring * deviation) + (damp * velocity);
-                aBody->ApplyForce (-F * delta);
-                bBody->ApplyForce (F * delta);
-                */
-
+                // compute the relative velocity damping to apply
                 var relativeVelocity = a.velocity.subtract(b.velocity);
                 var springVelocity = relativeVelocity.dot (delta);
+                var velocityDampingForce = 0.5 * springVelocity;
 
+                // apply a spring force to make d be equal to constraint.d,
+                // using Hooke's law
                 var x = d - constraint.d;
-                var k = subSteps * 0.5;
-                var F = (k * x) + (0.5 * springVelocity);
+                var k = 0.5;
+                var F = (k * x) + velocityDampingForce;
                 a.applyForce (delta.scale (-F));
                 b.applyForce (delta.scale (F))
             }
             resolve (0); resolve (1); resolve (2);
         }
 
-        var subSteps = 4;
+        var subSteps = 3;
         var dT = deltaTime / subSteps;
         for (var i = 0; i < subSteps; ++i) {
             subStep (dT);

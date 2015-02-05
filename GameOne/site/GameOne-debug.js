@@ -135,7 +135,7 @@ var Cluster = function () {
         var particle = function (i) {
             var r = 0.01, d = 300;
             var p = Object.create(Particle).init (name + "-" + i, points[i], r, d);
-            p.damping = -0.01;
+            p.damping = 0;
             return p;
         }
         this.particles = [ particle (0), particle (1), particle (2) ];
@@ -186,16 +186,24 @@ var Cluster = function () {
                 var b = scope.particles[constraint.b];
                 var delta = a.position.subtract (b.position);
                 var d = delta.normalize ();
+
+
+                var relativeVelocity = a.velocity.subtract(b.velocity);
+                var springVelocity = relativeVelocity.dot (delta);
+                var velocityDampingForce = 0.5 * springVelocity;
+
+
+
                 var x = d - constraint.d;
-                var k = subSteps * 0.5;
-                var F = k * x;
+                var k = 0.5;
+                var F = (k * x) + velocityDampingForce;
                 a.applyForce (delta.scale (-F));
                 b.applyForce (delta.scale (F))
             }
             resolve (0); resolve (1); resolve (2);
         }
 
-        var subSteps = 4;
+        var subSteps = 3;
         var dT = deltaTime / subSteps;
         for (var i = 0; i < subSteps; ++i) {
             subStep (dT);
