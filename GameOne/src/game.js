@@ -92,8 +92,7 @@ function initPage() {
         .attr("stroke", "rgba(0, 0, 0, 0.20)")
         .attr("stroke-width", 1 / scale);
 
-    //var ship = Object.create (Ship).init ("Ship 1", Vector2d.zero(), Math.PI / 2.0);
-    var ship = Object.create(Cluster).init("Ship 1", Vector2d.zero()).makeGeometry(svg);
+    var ship = Object.create(Ship).init("Ship 1", Vector2d.zero()).makeGeometry(svg);
     //debugger;
     var gametimer = setInterval(function () {
     /*
@@ -106,28 +105,11 @@ function initPage() {
             ship.damping = -0.75;
             ship.spinDamping = -0.75;
         }
-        if (upkeydown) { ship.thrust(100); }
-        if (leftkeydown) { ship.rotate(100); }
-        if (rightkeydown) { ship.rotate(-100); }
         */
-        var o = Vector2d.angle(ship.spinPosition);
-        if (upkeydown) {
-            ship.particles[0].applyAcceleration(o);
-            ship.particles[1].applyAcceleration(o);
-        }
-        if (downkeydown) {
-            o = o.scale(-0.5);
-            ship.particles[0].applyAcceleration(o);
-            ship.particles[1].applyAcceleration(o);
-        }
-        if (rightkeydown) {
-            ship.particles[0].applyAcceleration(o);
-            ship.particles[1].applyAcceleration(o.scale(-1));
-        }
-        if (leftkeydown) {
-            ship.particles[0].applyAcceleration(o.scale(-1));
-            ship.particles[1].applyAcceleration(o);
-        }
+        if (upkeydown) { ship.thrust(100); }
+        if (downkeydown) { ship.thrust(-50); }
+        if (rightkeydown) { ship.rotate(50); }
+        if (leftkeydown) { ship.rotate(-50); }
 
         ship.update(deltaTime);
         ship.paint();

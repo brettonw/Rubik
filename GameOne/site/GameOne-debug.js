@@ -245,20 +245,24 @@ var Thing = function () {
     return _;
 }();
 var Ship = function () {
-    var _ = Object.create(Thing);
+    var _ = Object.create(Cluster);
     _.init = function (name, position, spinPosition) {
         Object.getPrototypeOf(Ship).init.call(this, name, position, spinPosition);
-        this.thrustRatio = 10.0;
-        this.rotateRatio = 10.0;
+        this.thrustRatio = 5.0;
+        this.rotateRatio = 5.0;
         return this;
     }
     _.thrust = function (percent) {
         var orientationVector = Vector2d.angle(this.spinPosition);
         var thrustVector = orientationVector.scale(this.thrustRatio * (percent / 100.0));
-        this.applyAcceleration(thrustVector);
+        this.particles[0].applyAcceleration(thrustVector);
+        this.particles[1].applyAcceleration(thrustVector);
     }
     _.rotate = function (percent) {
-        this.applySpinAcceleration(this.rotateRatio * (percent / 100.0));
+        var orientationVector = Vector2d.angle(this.spinPosition);
+        var thrustVector = orientationVector.scale(this.rotateRatio * (percent / 100.0));
+        this.particles[0].applyAcceleration(thrustVector);
+        this.particles[1].applyAcceleration(thrustVector.scale (-1));
     }
     return _;
 }();
@@ -337,26 +341,12 @@ function initPage() {
         .attr("y2", function(d) { return d; })
         .attr("stroke", "rgba(0, 0, 0, 0.20)")
         .attr("stroke-width", 1 / scale);
-    var ship = Object.create(Cluster).init("Ship 1", Vector2d.zero()).makeGeometry(svg);
+    var ship = Object.create(Ship).init("Ship 1", Vector2d.zero()).makeGeometry(svg);
     var gametimer = setInterval(function () {
-        var o = Vector2d.angle(ship.spinPosition);
-        if (upkeydown) {
-            ship.particles[0].applyAcceleration(o);
-            ship.particles[1].applyAcceleration(o);
-        }
-        if (downkeydown) {
-            o = o.scale(-0.5);
-            ship.particles[0].applyAcceleration(o);
-            ship.particles[1].applyAcceleration(o);
-        }
-        if (rightkeydown) {
-            ship.particles[0].applyAcceleration(o);
-            ship.particles[1].applyAcceleration(o.scale(-1));
-        }
-        if (leftkeydown) {
-            ship.particles[0].applyAcceleration(o.scale(-1));
-            ship.particles[1].applyAcceleration(o);
-        }
+        if (upkeydown) { ship.thrust(100); }
+        if (downkeydown) { ship.thrust(-50); }
+        if (rightkeydown) { ship.rotate(50); }
+        if (leftkeydown) { ship.rotate(-50); }
         ship.update(deltaTime);
         ship.paint();
     }, 1000 * deltaTime);
