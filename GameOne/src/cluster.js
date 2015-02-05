@@ -12,14 +12,22 @@ var Cluster = function () {
     // to be stabilized after applying forces
     var subStepCount = 3;
 
+    // incorporate the aggregate result of our particle cluster simulation to
+    // show the larger object behavior. we include measuring velocities and
+    // acceleration of the aggregate object
     var updateFrameOfReference = function (cluster) {
+        var particles = cluster.particles;
+
         // the frame of reference sets the position at the centroid of the
         // particle cluster
-        var particles = cluster.particles;
-        cluster.position = particles[0].position
+        var position = particles[0].position
             .add(particles[1].position)
             .add(particles[2].position)
             .scale(1.0 / 3.0);
+        cluster.velocity = position
+            .subtract(cluster.position)
+            .scale(1.0 / deltaTime);
+        cluster.position = position;
 
         // the frame of reference is computed as the line between [0,1] and
         // [2,midpoint(0,1)], we might need to do a "polish" step on this in
@@ -29,7 +37,9 @@ var Cluster = function () {
             .scale(0.5);
         var xAxis = cluster.particles[2].position
             .subtract(midpoint).normalized();
-        cluster.spinPosition = Math.atan2(xAxis.y, xAxis.x);
+        var spinPosition = Math.atan2(xAxis.y, xAxis.x);
+        cluster.spinVelocity = (spinPosition - cluster.spinPosition) / deltaTime;
+        cluster.spinPosition = spinPosition;
 
         // reset the particles to be where they are supposed to be, this is 
         // kind of cheating, but it resolves the drift problem that can only
@@ -45,17 +55,16 @@ var Cluster = function () {
         resetParticle(2);
     }
 
-    _.init = function (name) {
+    _.init = function (name, position) {
         this.name = name;
 
         // create the particle list
         var particle = function (i) {
             var r = 0.01, d = 300;
-            var p = Object.create(Particle).init(name + "-" + i, points[i], r, d);
-            p.damping = 0;//-0.001;
-            return p;
+            return Object.create(Particle).init(name + "-" + i, position.add(points[i]), r, d);
         }
         this.particles = [particle(0), particle(1), particle(2)];
+        this.mass = this.particles[0].mass + this.particles[1].mass + this.particles[2].mass;
 
         // create the constraint list
         var constrain = function (a, b) {
@@ -64,6 +73,10 @@ var Cluster = function () {
         this.constraints = [constrain(0, 1), constrain(1, 2), constrain(2, 0)];
 
         // set the initial frame of reference
+        this.position = position;
+        this.velocity = Vector2d.zero();
+        this.spinPosition = 0;
+        this.spinVelocity = 0;
         updateFrameOfReference(this);
 
         return this;
@@ -84,6 +97,11 @@ var Cluster = function () {
             .attr("fill-opacity", "0.33")
             .attr("points", points);
 
+        // add a line for the velocity vector
+        this.svgLine = container.append("line")
+            .attr("stroke", "blue")
+            .attr("stroke-width", 0.002);
+
         return this;
     };
 
@@ -99,13 +117,13 @@ var Cluster = function () {
                 var d = delta.normalize();
 
                 // compute the relative velocity damping to apply
-                // XXX this should be relative to dt and mass, I think
                 var relativeVelocity = a.velocity.subtract(b.velocity);
                 var springVelocity = relativeVelocity.dot(delta);
                 var velocityDampingForce = 0.5 * 0.5 * springVelocity * (a.mass + b.mass) / dT;
 
                 // compute a spring force to make d be equal to constraint.d,
                 // using Hooke's law
+                // XXX this should be relative to dt and mass, I think
                 var x = d - constraint.d;
                 var k = 1;
                 var springForce = k * x;
@@ -137,6 +155,14 @@ var Cluster = function () {
 
         // update the ghost
         this.svg.attr("transform", "translate(" + this.position.x + "," + this.position.y + ") rotate(" + (this.spinPosition * (180.0 / Math.PI)) + ", 0, 0)");
+
+        // update the velocity indicator
+        this.svgLine
+            .attr("transform", "translate(" + this.position.x + "," + this.position.y + ")")
+            .attr("x1", 0)
+            .attr("y1", 0)
+            .attr("x2", this.velocity.x)
+            .attr("y2", this.velocity.y);
 
         // update the particles
         this.particles[0].paint();

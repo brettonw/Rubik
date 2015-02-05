@@ -11,12 +11,8 @@ var Thing = function () {
         this.spinPosition = spinPosition;
         this.spinVelocity = 0.0;
         this.spinForce = 0.0;
-        this.spinDamping = -0.05;
 
         return this;
-    }
-
-    _.integrate = function (deltaTime) {
     }
 
     _.applySpinForce = function (spinForce) {
@@ -26,6 +22,13 @@ var Thing = function () {
     _.applySpinAcceleration = function (spinAcceleration) {
         var spinForce = spinAcceleration * this.spinMass;
         this.applySpinForce(spinForce);
+    }
+
+    _.applySpinDamping = function (spinDamping) {
+        // compute force due to damping, this is computed on a frame by frame
+        // basis, as opposed to over some time period (like 1 second)
+        this.applySpinAcceleration(this.spinVelocity * spinDamping / deltaTime);
+
     }
 
     _.makeGeometry = function (container) {
@@ -53,10 +56,7 @@ var Thing = function () {
 
     _.update = function (deltaTime) {
         // do the parental thing
-        Object.getPrototypeOf(Thing).update.call(this, deltaTime);
-
-        // compute force due to damping
-        this.applySpinAcceleration(this.spinVelocity * this.spinDamping / deltaTime);
+        Object.getPrototypeOf(Thing).update.call(this);
 
         // compute acceleration from the force, then clear out the force
         var deltaSpinVelocity = this.spinForce * (deltaTime / this.spinMass);

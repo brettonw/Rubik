@@ -1,4 +1,5 @@
 var scale = 1.0;
+var deltaTime = 1.0 / 20.0;
 
 var leftkeydown = false;
 var upkeydown = false;
@@ -92,9 +93,7 @@ function initPage() {
         .attr("stroke-width", 1 / scale);
 
     //var ship = Object.create (Ship).init ("Ship 1", Vector2d.zero(), Math.PI / 2.0);
-    var ship = Object.create (Cluster).init ("Ship 1").makeGeometry(svg);
-    ship
-    var deltaTime = 1.0 / 20.0;
+    var ship = Object.create(Cluster).init("Ship 1", Vector2d.zero()).makeGeometry(svg);
     //debugger;
     var gametimer = setInterval(function () {
     /*

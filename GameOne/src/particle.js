@@ -10,7 +10,6 @@ var Particle = function () {
         this.position = position;
         this.velocity = Vector2d.zero();
         this.force = Vector2d.zero();
-        this.damping = -0.1;
 
         return this;
     }
@@ -22,6 +21,12 @@ var Particle = function () {
     _.applyAcceleration = function (acceleration) {
         var force = acceleration.scale(this.mass);
         this.applyForce(force);
+    }
+
+    _.applyDamping = function (damping) {
+        // compute force due to damping, this is computed on a frame by frame
+        // basis, as opposed to over some time period (like 1 second)
+        this.applyAcceleration(this.velocity.scale(damping / deltaTime));
     }
 
     // geometry is used for bounding the object, for collision detection, for drawing,
@@ -41,10 +46,6 @@ var Particle = function () {
 
     // update the particle position and physical state for the specified timestep
     _.update = function (deltaTime) {
-        // compute force due to damping, this is computed on a frame by frame
-        // basis, as opposed to over some time period (like 1 second)
-        this.applyAcceleration(this.velocity.scale(this.damping / deltaTime));
-
         // compute acceleration from the forces, then clear out the forces
         var deltaVelocity = this.force.scale(deltaTime / this.mass);
         this.force = Vector2d.zero();

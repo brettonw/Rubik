@@ -36,7 +36,6 @@ var Particle = function () {
         this.position = position;
         this.velocity = Vector2d.zero();
         this.force = Vector2d.zero();
-        this.damping = -0.1;
         return this;
     }
     _.applyForce = function (force) {
@@ -45,6 +44,9 @@ var Particle = function () {
     _.applyAcceleration = function (acceleration) {
         var force = acceleration.scale(this.mass);
         this.applyForce(force);
+    }
+    _.applyDamping = function (damping) {
+        this.applyAcceleration(this.velocity.scale(damping / deltaTime));
     }
     _.makeGeometry = function (container) {
         this.svg = container.append("circle")
@@ -57,7 +59,6 @@ var Particle = function () {
         return this;
     };
     _.update = function (deltaTime) {
-        this.applyAcceleration(this.velocity.scale(this.damping / deltaTime));
         var deltaVelocity = this.force.scale(deltaTime / this.mass);
         this.force = Vector2d.zero();
         this.position = this.position.add((deltaVelocity.scale(0.5).add(this.velocity)).scale(deltaTime));
@@ -75,18 +76,25 @@ var Cluster = function () {
         Vector2d.xy(-0.05, -0.05),
         Vector2d.xy(0.10, 0.00)
     ];
-    var updateFrame = function (cluster) {
+    var subStepCount = 3;
+    var updateFrameOfReference = function (cluster) {
         var particles = cluster.particles;
-        cluster.position = particles[0].position
+        var position = particles[0].position
             .add(particles[1].position)
             .add(particles[2].position)
             .scale(1.0 / 3.0);
+        cluster.velocity = position
+            .subtract(cluster.position)
+            .scale(1.0 / deltaTime);
+        cluster.position = position;
         var midpoint = cluster.particles[0].position
             .add(cluster.particles[1].position)
             .scale(0.5);
         var xAxis = cluster.particles[2].position
             .subtract(midpoint).normalized();
-        cluster.spinPosition = Math.atan2(xAxis.y, xAxis.x);
+        var spinPosition = Math.atan2(xAxis.y, xAxis.x);
+        cluster.spinVelocity = (spinPosition - cluster.spinPosition) / deltaTime;
+        cluster.spinPosition = spinPosition;
         var yAxis = xAxis.perpendicular();
         var resetParticle = function (i) {
             particles[i].position = cluster.position
@@ -97,21 +105,23 @@ var Cluster = function () {
         resetParticle(1);
         resetParticle(2);
     }
-    _.init = function (name) {
+    _.init = function (name, position) {
         this.name = name;
         var particle = function (i) {
             var r = 0.01, d = 300;
-            var p = Object.create(Particle).init(name + "-" + i, points[i], r, d);
-            p.damping = 0;
-            return p;
+            return Object.create(Particle).init(name + "-" + i, position.add(points[i]), r, d);
         }
         this.particles = [particle(0), particle(1), particle(2)];
+        this.mass = this.particles[0].mass + this.particles[1].mass + this.particles[2].mass;
         var constrain = function (a, b) {
             return { "a": a, "b": b, "d": points[a].subtract(points[b]).norm() };
         }
         this.constraints = [constrain(0, 1), constrain(1, 2), constrain(2, 0)];
-        this.subStepCount = 3;
-        updateFrame(this);
+        this.position = position;
+        this.velocity = Vector2d.zero();
+        this.spinPosition = 0;
+        this.spinVelocity = 0;
+        updateFrameOfReference(this);
         return this;
     }
     _.makeGeometry = function (container) {
@@ -125,6 +135,9 @@ var Cluster = function () {
             .attr("fill", "red")
             .attr("fill-opacity", "0.33")
             .attr("points", points);
+        this.svgLine = container.append("line")
+            .attr("stroke", "blue")
+            .attr("stroke-width", 0.002);
         return this;
     };
     _.update = function (deltaTime) {
@@ -153,14 +166,20 @@ var Cluster = function () {
             scope.particles[1].update(dT);
             scope.particles[2].update(dT);
         }
-        var dT = deltaTime / this.subStepCount;
-        for (var i = 0; i < this.subStepCount; ++i) {
+        var dT = deltaTime / subStepCount;
+        for (var i = 0; i < subStepCount; ++i) {
             subStep(dT);
         }
     };
     _.paint = function () {
-        updateFrame(this);
+        updateFrameOfReference(this);
         this.svg.attr("transform", "translate(" + this.position.x + "," + this.position.y + ") rotate(" + (this.spinPosition * (180.0 / Math.PI)) + ", 0, 0)");
+        this.svgLine
+            .attr("transform", "translate(" + this.position.x + "," + this.position.y + ")")
+            .attr("x1", 0)
+            .attr("y1", 0)
+            .attr("x2", this.velocity.x)
+            .attr("y2", this.velocity.y);
         this.particles[0].paint();
         this.particles[1].paint();
         this.particles[2].paint();
@@ -175,10 +194,7 @@ var Thing = function () {
         this.spinPosition = spinPosition;
         this.spinVelocity = 0.0;
         this.spinForce = 0.0;
-        this.spinDamping = -0.05;
         return this;
-    }
-    _.integrate = function (deltaTime) {
     }
     _.applySpinForce = function (spinForce) {
         this.spinForce += spinForce;
@@ -186,6 +202,9 @@ var Thing = function () {
     _.applySpinAcceleration = function (spinAcceleration) {
         var spinForce = spinAcceleration * this.spinMass;
         this.applySpinForce(spinForce);
+    }
+    _.applySpinDamping = function (spinDamping) {
+        this.applySpinAcceleration(this.spinVelocity * spinDamping / deltaTime);
     }
     _.makeGeometry = function (container) {
         var geometry = [
@@ -209,8 +228,7 @@ var Thing = function () {
         return this;
     };
     _.update = function (deltaTime) {
-        Object.getPrototypeOf(Thing).update.call(this, deltaTime);
-        this.applySpinAcceleration(this.spinVelocity * this.spinDamping / deltaTime);
+        Object.getPrototypeOf(Thing).update.call(this);
         var deltaSpinVelocity = this.spinForce * (deltaTime / this.spinMass);
         this.spinForce = 0.0;
         this.spinPosition = this.spinPosition + (((deltaSpinVelocity * 0.5) + this.spinVelocity) * deltaTime);
@@ -245,6 +263,7 @@ var Ship = function () {
     return _;
 }();
 var scale = 1.0;
+var deltaTime = 1.0 / 20.0;
 var leftkeydown = false;
 var upkeydown = false;
 var rightkeydown = false;
@@ -318,9 +337,7 @@ function initPage() {
         .attr("y2", function(d) { return d; })
         .attr("stroke", "rgba(0, 0, 0, 0.20)")
         .attr("stroke-width", 1 / scale);
-    var ship = Object.create (Cluster).init ("Ship 1").makeGeometry(svg);
-    ship
-    var deltaTime = 1.0 / 20.0;
+    var ship = Object.create(Cluster).init("Ship 1", Vector2d.zero()).makeGeometry(svg);
     var gametimer = setInterval(function () {
         var o = Vector2d.angle(ship.spinPosition);
         if (upkeydown) {
