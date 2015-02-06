@@ -55,13 +55,37 @@ var Cluster = function () {
         resetParticle(2);
     }
 
-    _.init = function (name, position) {
+    _.reset = function (position, spinPosition) {
+        var scope = this;
+
+        // reset the particles
+        var xAxis = Vector2d.angle(spinPosition);
+        var yAxis = xAxis.perpendicular();
+        var particle = function (i) {
+            scope.particles[i].reset(position
+                .add(xAxis.scale(points[i].x))
+                .add(yAxis.scale(points[i].y))
+                );
+        }
+        particle(0); particle(1); particle(2);
+
+        // set the initial frame of reference
+        this.position = position;
+        this.velocity = Vector2d.zero();
+        this.spinPosition = spinPosition;
+        this.spinVelocity = 0;
+
+        // update the frame of reference
+        updateFrameOfReference(this);
+    }
+
+    _.init = function (name, position, spinPosition) {
         this.name = name;
 
         // create the particle list
         var particle = function (i) {
             var r = 0.01, d = 300;
-            return Object.create(Particle).init(name + "-" + i, position.add(points[i]), r, d);
+            return Object.create(Particle).init(name + "-" + i, Vector2d.zero (), r, d);
         }
         this.particles = [particle(0), particle(1), particle(2)];
         this.mass = this.particles[0].mass + this.particles[1].mass + this.particles[2].mass;
@@ -72,12 +96,8 @@ var Cluster = function () {
         }
         this.constraints = [constrain(0, 1), constrain(1, 2), constrain(2, 0)];
 
-        // set the initial frame of reference
-        this.position = position;
-        this.velocity = Vector2d.zero();
-        this.spinPosition = 0;
-        this.spinVelocity = 0;
-        updateFrameOfReference(this);
+        // set everything for the first run
+        this.reset(position, spinPosition);
 
         return this;
     }

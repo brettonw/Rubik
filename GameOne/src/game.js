@@ -123,7 +123,7 @@ function initPage() {
         .attr("r", 0.01);
 
 
-    var ship = Object.create(Ship).init("Ship 1", Vector2d.zero()).makeGeometry(svg);
+    var ship = Object.create(Ship).init("Ship 1", Vector2d.zero(), 0).makeGeometry(svg);
     var gametimer = setInterval(function () {
         var leftThrust = 0.0;
         var rightThrust = 0.0;

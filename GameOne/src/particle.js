@@ -1,15 +1,19 @@
 var Particle = function () {
     var _ = Object.create(null);
 
-    _.init = function (name, position, radius, density) {
-        this.name = name;
-
-        // parameters of a physical body in 2 dimensions
-        this.radius = radius;
-        this.mass = Math.PI * radius * radius * density;
+    _.reset = function (position) {
         this.position = position;
         this.velocity = Vector2d.zero();
         this.force = Vector2d.zero();
+    }
+
+    _.init = function (name, position, radius, density) {
+        this.name = name;
+
+        // parameters of a physical body in
+        this.radius = radius;
+        this.mass = Math.PI * radius * radius * density;
+        this.reset(position);
 
         return this;
     }
