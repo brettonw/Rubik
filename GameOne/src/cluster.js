@@ -102,6 +102,10 @@ var Cluster = function () {
         return this;
     }
 
+    // XXX SERIOUS ISSUE
+    // forces and other accumulation operations (like thrust) need to be applied
+    // over the full timestep, not just over the sub steps - how to accomplish this...
+
     _.applyFunction = function (f) {
         f (this.particles[0]);
         f (this.particles[1]);
