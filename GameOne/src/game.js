@@ -6,6 +6,17 @@ var upkeydown = false;
 var rightkeydown = false;
 var downkeydown = false;
 
+var targetPt = Vector2d.xy(0, 1);
+function click(){
+  // ignore the click event if it was suppressed
+  if (d3.event.defaultPrevented) return;
+
+  // extract the click location
+  var point = d3.mouse(this);
+  targetPt = Vector2d.a(point);
+}
+
+
 function initPage() {
     // add a keypress handler to the body
     var body = document.body;
@@ -60,7 +71,7 @@ function initPage() {
     svg.attr ("transform", "translate(" + (xScale / 2.0) + "," + (yScale / 2.0) + ") scale(" + scale + "," + -scale + ")");
 
     // create a child g element to contain the world
-    svg = svg.append("g").attr("class", "gameDisplay");
+    svg = svg.append("g").attr("class", "gameDisplay").on("click", click);
 
     // add a grid
     var gridLines = [0.0];
@@ -92,6 +103,15 @@ function initPage() {
         .attr("stroke", "rgba(0, 0, 0, 0.20)")
         .attr("stroke-width", 1 / scale);
 
+        var target = svg.append("circle")
+            .attr("stroke-width", 2.0 / scale)
+            .attr("fill", "green")
+            .attr("fill-opacity", "1.0")
+            .attr("stroke", "black")
+            .attr("stroke-opacity", "1.0")
+            .attr("r", 0.05);
+
+
     var ship = Object.create(Ship).init("Ship 1", Vector2d.zero()).makeGeometry(svg);
     var gametimer = setInterval(function () {
         var leftThrust = 0.0;
@@ -103,6 +123,10 @@ function initPage() {
         leftThrust = Math.max(-1.0, leftThrust); leftThrust = Math.min(1.0, leftThrust);
         rightThrust = Math.max(-1.0, rightThrust); rightThrust = Math.min(1.0, rightThrust);
         ship.thrust (leftThrust, rightThrust);
+
+        // put the target under the mouse
+        var mouse = d3.mouse
+        target.attr("transform", "translate(" + targetPt.x + "," + targetPt.y + ")");
 
         ship.point (Vector2d.xy(0, 1));
 

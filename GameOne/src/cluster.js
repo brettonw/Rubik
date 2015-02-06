@@ -107,7 +107,7 @@ var Cluster = function () {
         this.svgLine = container.append("line")
             .attr("stroke", "blue")
             .attr("stroke-opacity", 0.33)
-            .attr("stroke-width", 0.002);
+            .attr("stroke-width", 2.0 / scale);
 
         return this;
     };

@@ -9,7 +9,7 @@ var Vector2d = function () {
     };
 
     // constructors
-    _.make = function (a) { return makeVector(a[0], a[1]); };
+    _.a = function (a) { return makeVector(a[0], a[1]); };
     _.xy = function (x, y) { return makeVector(x, y); };
     _.v = function (v) { return makeVector(v.x, v.y); };
     _.angle = function (a) { return makeVector(Math.cos(a), Math.sin(a)); };
