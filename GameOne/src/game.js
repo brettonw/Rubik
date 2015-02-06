@@ -93,24 +93,31 @@ function initPage() {
         .attr("stroke-width", 1 / scale);
 
     var ship = Object.create(Ship).init("Ship 1", Vector2d.zero()).makeGeometry(svg);
-    //debugger;
     var gametimer = setInterval(function () {
-    /*
-        if (ship.position.y > 0) {
-            ship.applyAcceleration(Vector2d.xy(0, -9.8));
-            ship.damping = -0.01;
-            ship.spinDamping = -0.05;
-        } else {
-            ship.applyAcceleration(Vector2d.xy(0, -10.0 * ship.position.y));
-            ship.damping = -0.75;
-            ship.spinDamping = -0.75;
-        }
-        */
-        if (upkeydown) { ship.thrust(100); }
-        if (downkeydown) { ship.thrust(-50); }
-        if (rightkeydown) { ship.rotate(50); }
-        if (leftkeydown) { ship.rotate(-50); }
+        var leftThrust = 0.0;
+        var rightThrust = 0.0;
+        if (upkeydown) { leftThrust += 1.0; rightThrust += 1.0; }
+        if (downkeydown) { leftThrust += -0.5; rightThrust += -0.5; }
+        if (rightkeydown) { leftThrust += 0.5; rightThrust += -0.5; }
+        if (leftkeydown) { leftThrust += -0.5; rightThrust += 0.5; }
+        leftThrust = Math.max(-1.0, leftThrust); leftThrust = Math.min(1.0, leftThrust);
+        rightThrust = Math.max(-1.0, rightThrust); rightThrust = Math.min(1.0, rightThrust);
+        ship.thrust (leftThrust, rightThrust);
 
+        ship.point (Vector2d.xy(0, 1));
+
+        ship.applyFunction (function (particle) {
+            if (particle.position.y > 0.5) {
+                particle.applyAcceleration(Vector2d.xy(0, -9.8));
+            } else if (particle.position.y > 0.0) {
+                var scale = 0.5 - particle.position.y;
+                particle.applyAcceleration(Vector2d.xy(0, -9.8 * scale));
+                particle.applyDamping(-scale);
+            } else {
+                particle.applyAcceleration(Vector2d.xy(0, -5.0 * particle.position.y));
+                particle.applyDamping(-0.5);
+            }
+        });
         ship.update(deltaTime);
         ship.paint();
     }, 1000 * deltaTime);

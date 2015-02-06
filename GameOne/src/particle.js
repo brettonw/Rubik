@@ -29,6 +29,10 @@ var Particle = function () {
         this.applyAcceleration(this.velocity.scale(damping / deltaTime));
     }
 
+    _.applyFunction = function (f) {
+        f (this);
+    }
+
     // geometry is used for bounding the object, for collision detection, for drawing,
     // and for creating the visual representation, computed values assume a homo-
     // genous object with geometry centered (the CG is located at the origin)

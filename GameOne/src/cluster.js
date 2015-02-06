@@ -41,7 +41,7 @@ var Cluster = function () {
         cluster.spinVelocity = (spinPosition - cluster.spinPosition) / deltaTime;
         cluster.spinPosition = spinPosition;
 
-        // reset the particles to be where they are supposed to be, this is 
+        // reset the particles to be where they are supposed to be, this is
         // kind of cheating, but it resolves the drift problem that can only
         // be fixed by going to much higher simulation rates
         var yAxis = xAxis.perpendicular();
@@ -82,6 +82,12 @@ var Cluster = function () {
         return this;
     }
 
+    _.applyFunction = function (f) {
+        f (this.particles[0]);
+        f (this.particles[1]);
+        f (this.particles[2]);
+    }
+
     _.makeGeometry = function (container) {
         // add the particles so I can see them
         this.particles[0].makeGeometry(container);
@@ -94,12 +100,13 @@ var Cluster = function () {
                      this.particles[2].position.toString();
         this.svg = container.append("polygon")
             .attr("fill", "red")
-            .attr("fill-opacity", "0.33")
+            .attr("fill-opacity", 0.33)
             .attr("points", points);
 
         // add a line for the velocity vector
         this.svgLine = container.append("line")
             .attr("stroke", "blue")
+            .attr("stroke-opacity", 0.33)
             .attr("stroke-width", 0.002);
 
         return this;
