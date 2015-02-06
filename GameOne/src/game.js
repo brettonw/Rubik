@@ -6,13 +6,14 @@ var upkeydown = false;
 var rightkeydown = false;
 var downkeydown = false;
 
+var clickContainer;
 var targetPt = Vector2d.xy(0, 1);
 function click(){
   // ignore the click event if it was suppressed
   if (d3.event.defaultPrevented) return;
 
   // extract the click location
-  var point = d3.mouse(this);
+  var point = d3.mouse(clickContainer);
   targetPt = Vector2d.a(point);
 }
 
@@ -62,6 +63,8 @@ function initPage() {
                 );
         })
     );
+    clickContainer = svg;
+    svg.on("click", click);
 
     // create a child g element to receive the universe transform (invert y and scale the view to [0..1, 0..1])
     svg = child.append("g").attr("class", "gameDisplay");
@@ -71,7 +74,7 @@ function initPage() {
     svg.attr ("transform", "translate(" + (xScale / 2.0) + "," + (yScale / 2.0) + ") scale(" + scale + "," + -scale + ")");
 
     // create a child g element to contain the world
-    svg = svg.append("g").attr("class", "gameDisplay").on("click", click);
+    svg = svg.append("g").attr("class", "gameDisplay");
 
     // add a grid
     var gridLines = [0.0];
@@ -109,7 +112,7 @@ function initPage() {
             .attr("fill-opacity", "1.0")
             .attr("stroke", "black")
             .attr("stroke-opacity", "1.0")
-            .attr("r", 0.05);
+            .attr("r", 0.01);
 
 
     var ship = Object.create(Ship).init("Ship 1", Vector2d.zero()).makeGeometry(svg);
@@ -125,7 +128,6 @@ function initPage() {
         ship.thrust (leftThrust, rightThrust);
 
         // put the target under the mouse
-        var mouse = d3.mouse
         target.attr("transform", "translate(" + targetPt.x + "," + targetPt.y + ")");
 
         ship.point (Vector2d.xy(0, 1));

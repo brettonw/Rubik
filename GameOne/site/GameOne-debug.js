@@ -13,7 +13,7 @@ var Vector2d = function () {
     };
 
 
-    _.make = function (a) { return makeVector(a[0], a[1]); };
+    _.a = function (a) { return makeVector(a[0], a[1]); };
     _.xy = function (x, y) { return makeVector(x, y); };
     _.v = function (v) { return makeVector(v.x, v.y); };
     _.angle = function (a) { return makeVector(Math.cos(a), Math.sin(a)); };
@@ -221,7 +221,7 @@ var Cluster = function () {
         this.svgLine = container.append("line")
             .attr("stroke", "blue")
             .attr("stroke-opacity", 0.33)
-            .attr("stroke-width", 0.002);
+            .attr("stroke-width", 2.0 / scale);
 
         return this;
     };
@@ -428,6 +428,18 @@ var upkeydown = false;
 var rightkeydown = false;
 var downkeydown = false;
 
+var clickContainer;
+var targetPt = Vector2d.xy(0, 1);
+function click(){
+
+  if (d3.event.defaultPrevented) return;
+
+
+  var point = d3.mouse(clickContainer);
+  targetPt = Vector2d.a(point);
+}
+
+
 function initPage() {
 
     var body = document.body;
@@ -473,6 +485,8 @@ function initPage() {
                 );
         })
     );
+    clickContainer = svg;
+    svg.on("click", click);
 
 
     svg = child.append("g").attr("class", "gameDisplay");
@@ -514,6 +528,15 @@ function initPage() {
         .attr("stroke", "rgba(0, 0, 0, 0.20)")
         .attr("stroke-width", 1 / scale);
 
+        var target = svg.append("circle")
+            .attr("stroke-width", 2.0 / scale)
+            .attr("fill", "green")
+            .attr("fill-opacity", "1.0")
+            .attr("stroke", "black")
+            .attr("stroke-opacity", "1.0")
+            .attr("r", 0.01);
+
+
     var ship = Object.create(Ship).init("Ship 1", Vector2d.zero()).makeGeometry(svg);
     var gametimer = setInterval(function () {
         var leftThrust = 0.0;
@@ -525,6 +548,9 @@ function initPage() {
         leftThrust = Math.max(-1.0, leftThrust); leftThrust = Math.min(1.0, leftThrust);
         rightThrust = Math.max(-1.0, rightThrust); rightThrust = Math.min(1.0, rightThrust);
         ship.thrust (leftThrust, rightThrust);
+
+
+        target.attr("transform", "translate(" + targetPt.x + "," + targetPt.y + ")");
 
         ship.point (Vector2d.xy(0, 1));
 
