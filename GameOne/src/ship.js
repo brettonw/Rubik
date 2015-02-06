@@ -32,11 +32,18 @@ var Ship = function () {
 
         // compute the desired change in rotational velocity, and the thrust
         // associated with that, then apply it
-        var deltaVelocity = (delta / deltaTime) - this.spinVelocity;
+        var speed = 0.5;
+        var deltaVelocity = speed * ((delta / deltaTime) - this.spinVelocity);
         var sign = (deltaVelocity < 0) ? -1 : ((deltaVelocity > 0) ? 1 : 0);
         var stiffness = 0.5;
         var thrust = stiffness * sign * Math.min (1.0, sign * deltaVelocity / Math.PI);
         this.thrust (-thrust, thrust);
+        //console.log ("thrust: " + thrust);
+    }
+
+    _.pointAt = function (point) {
+        var direction = point.subtract (this.position).normalized ();
+        this.point (direction);
     }
 
     return _;

@@ -6,32 +6,20 @@ var upkeydown = false;
 var rightkeydown = false;
 var downkeydown = false;
 
-var clickContainer;
-var targetPt = Vector2d.xy(0, 1);
-function click(){
-  // ignore the click event if it was suppressed
-  if (d3.event.defaultPrevented) return;
-
-  // extract the click location
-  var point = d3.mouse(clickContainer);
-  targetPt = Vector2d.a(point);
-}
-
-
 function initPage() {
     // add a keypress handler to the body
     var body = document.body;
-    body.onkeydown = function () {
-        if (event.keyCode == 37) leftkeydown = true;
-        if (event.keyCode == 38) upkeydown = true;
-        if (event.keyCode == 39) rightkeydown = true;
-        if (event.keyCode == 40) downkeydown = true;
+    body.onkeydown = function (e) {
+        if (e.keyCode == 37) leftkeydown = true;
+        if (e.keyCode == 38) upkeydown = true;
+        if (e.keyCode == 39) rightkeydown = true;
+        if (e.keyCode == 40) downkeydown = true;
     }
-    body.onkeyup = function () {
-        if (event.keyCode == 37) leftkeydown = false;
-        if (event.keyCode == 38) upkeydown = false;
-        if (event.keyCode == 39) rightkeydown = false;
-        if (event.keyCode == 40) downkeydown = false;
+    body.onkeyup = function (e) {
+        if (e.keyCode == 37) leftkeydown = false;
+        if (e.keyCode == 38) upkeydown = false;
+        if (e.keyCode == 39) rightkeydown = false;
+        if (e.keyCode == 40) downkeydown = false;
     }
     var target = d3.select("#display");
     var svg = target.append("svg").attr("class", "gameDisplay");
@@ -63,8 +51,6 @@ function initPage() {
                 );
         })
     );
-    clickContainer = svg;
-    svg.on("click", click);
 
     // create a child g element to receive the universe transform (invert y and scale the view to [0..1, 0..1])
     svg = child.append("g").attr("class", "gameDisplay");
@@ -73,8 +59,29 @@ function initPage() {
     scale = Math.min (xScale, yScale);
     svg.attr ("transform", "translate(" + (xScale / 2.0) + "," + (yScale / 2.0) + ") scale(" + scale + "," + -scale + ")");
 
+    // set up the svg event handler for mouse moves
+    var targetPt = Vector2d.xy(0, 1);
+    svg.on("mousemove", function () {
+        // extract the click location
+        var point = d3.mouse(this);
+        targetPt = Vector2d.a(point);
+        target.attr("transform", "translate(" + targetPt.x + "," + targetPt.y + ")");
+        //console.log ("XY (" + targetPt.toString() + ")");
+    });
+
     // create a child g element to contain the world
     svg = svg.append("g").attr("class", "gameDisplay");
+
+    // add a big rectangle to the background of the world so I can get mouse events
+    // XXX need to get D3 the fuck out of this so I can actually do smart things
+    svg.append("rect")
+        .attr("x", -10)
+        .attr("y", -2)
+        .attr("width", 20)
+        .attr("height", 12)
+        .attr("fill", "white")
+        .attr("fill-opacity", "0.5");
+
 
     // add a grid
     var gridLines = [0.0];
@@ -106,13 +113,14 @@ function initPage() {
         .attr("stroke", "rgba(0, 0, 0, 0.20)")
         .attr("stroke-width", 1 / scale);
 
-        var target = svg.append("circle")
-            .attr("stroke-width", 2.0 / scale)
-            .attr("fill", "green")
-            .attr("fill-opacity", "1.0")
-            .attr("stroke", "black")
-            .attr("stroke-opacity", "1.0")
-            .attr("r", 0.01);
+    // add the target circle
+    var target = svg.append("circle")
+        .attr("stroke-width", 2.0 / scale)
+        .attr("fill", "green")
+        .attr("fill-opacity", "1.0")
+        .attr("stroke", "black")
+        .attr("stroke-opacity", "1.0")
+        .attr("r", 0.01);
 
 
     var ship = Object.create(Ship).init("Ship 1", Vector2d.zero()).makeGeometry(svg);
@@ -128,22 +136,24 @@ function initPage() {
         ship.thrust (leftThrust, rightThrust);
 
         // put the target under the mouse
-        target.attr("transform", "translate(" + targetPt.x + "," + targetPt.y + ")");
 
-        ship.point (Vector2d.xy(0, 1));
+        ship.pointAt (targetPt);
 
-        ship.applyFunction (function (particle) {
-            if (particle.position.y > 0.5) {
-                particle.applyAcceleration(Vector2d.xy(0, -9.8));
-            } else if (particle.position.y > 0.0) {
-                var scale = 0.5 - particle.position.y;
-                particle.applyAcceleration(Vector2d.xy(0, -9.8 * scale));
-                particle.applyDamping(-scale);
-            } else {
-                particle.applyAcceleration(Vector2d.xy(0, -5.0 * particle.position.y));
-                particle.applyDamping(-0.5);
-            }
-        });
+        // gravity
+        if (false) {
+            ship.applyFunction (function (particle) {
+                if (particle.position.y > 0.5) {
+                    particle.applyAcceleration(Vector2d.xy(0, -9.8));
+                } else if (particle.position.y > 0.0) {
+                    var scale = 0.5 - particle.position.y;
+                    particle.applyAcceleration(Vector2d.xy(0, -9.8 * scale));
+                    particle.applyDamping(-scale);
+                } else {
+                    particle.applyAcceleration(Vector2d.xy(0, -5.0 * particle.position.y));
+                    particle.applyDamping(-0.5);
+                }
+            });
+        }
         ship.update(deltaTime);
         ship.paint();
     }, 1000 * deltaTime);

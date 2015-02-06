@@ -411,11 +411,18 @@ var Ship = function () {
 
 
 
-        var deltaVelocity = (delta / deltaTime) - this.spinVelocity;
+        var speed = 0.5;
+        var deltaVelocity = speed * ((delta / deltaTime) - this.spinVelocity);
         var sign = (deltaVelocity < 0) ? -1 : ((deltaVelocity > 0) ? 1 : 0);
         var stiffness = 0.5;
         var thrust = stiffness * sign * Math.min (1.0, sign * deltaVelocity / Math.PI);
         this.thrust (-thrust, thrust);
+
+    }
+
+    _.pointAt = function (point) {
+        var direction = point.subtract (this.position).normalized ();
+        this.point (direction);
     }
 
     return _;
@@ -428,32 +435,20 @@ var upkeydown = false;
 var rightkeydown = false;
 var downkeydown = false;
 
-var clickContainer;
-var targetPt = Vector2d.xy(0, 1);
-function click(){
-
-  if (d3.event.defaultPrevented) return;
-
-
-  var point = d3.mouse(clickContainer);
-  targetPt = Vector2d.a(point);
-}
-
-
 function initPage() {
 
     var body = document.body;
-    body.onkeydown = function () {
-        if (event.keyCode == 37) leftkeydown = true;
-        if (event.keyCode == 38) upkeydown = true;
-        if (event.keyCode == 39) rightkeydown = true;
-        if (event.keyCode == 40) downkeydown = true;
+    body.onkeydown = function (e) {
+        if (e.keyCode == 37) leftkeydown = true;
+        if (e.keyCode == 38) upkeydown = true;
+        if (e.keyCode == 39) rightkeydown = true;
+        if (e.keyCode == 40) downkeydown = true;
     }
-    body.onkeyup = function () {
-        if (event.keyCode == 37) leftkeydown = false;
-        if (event.keyCode == 38) upkeydown = false;
-        if (event.keyCode == 39) rightkeydown = false;
-        if (event.keyCode == 40) downkeydown = false;
+    body.onkeyup = function (e) {
+        if (e.keyCode == 37) leftkeydown = false;
+        if (e.keyCode == 38) upkeydown = false;
+        if (e.keyCode == 39) rightkeydown = false;
+        if (e.keyCode == 40) downkeydown = false;
     }
     var target = d3.select("#display");
     var svg = target.append("svg").attr("class", "gameDisplay");
@@ -485,8 +480,6 @@ function initPage() {
                 );
         })
     );
-    clickContainer = svg;
-    svg.on("click", click);
 
 
     svg = child.append("g").attr("class", "gameDisplay");
@@ -496,7 +489,28 @@ function initPage() {
     svg.attr ("transform", "translate(" + (xScale / 2.0) + "," + (yScale / 2.0) + ") scale(" + scale + "," + -scale + ")");
 
 
+    var targetPt = Vector2d.xy(0, 1);
+    svg.on("mousemove", function () {
+
+        var point = d3.mouse(this);
+        targetPt = Vector2d.a(point);
+        target.attr("transform", "translate(" + targetPt.x + "," + targetPt.y + ")");
+
+    });
+
+
     svg = svg.append("g").attr("class", "gameDisplay");
+
+
+
+    svg.append("rect")
+        .attr("x", -10)
+        .attr("y", -2)
+        .attr("width", 20)
+        .attr("height", 12)
+        .attr("fill", "white")
+        .attr("fill-opacity", "0.5");
+
 
 
     var gridLines = [0.0];
@@ -528,13 +542,14 @@ function initPage() {
         .attr("stroke", "rgba(0, 0, 0, 0.20)")
         .attr("stroke-width", 1 / scale);
 
-        var target = svg.append("circle")
-            .attr("stroke-width", 2.0 / scale)
-            .attr("fill", "green")
-            .attr("fill-opacity", "1.0")
-            .attr("stroke", "black")
-            .attr("stroke-opacity", "1.0")
-            .attr("r", 0.01);
+
+    var target = svg.append("circle")
+        .attr("stroke-width", 2.0 / scale)
+        .attr("fill", "green")
+        .attr("fill-opacity", "1.0")
+        .attr("stroke", "black")
+        .attr("stroke-opacity", "1.0")
+        .attr("r", 0.01);
 
 
     var ship = Object.create(Ship).init("Ship 1", Vector2d.zero()).makeGeometry(svg);
@@ -550,22 +565,24 @@ function initPage() {
         ship.thrust (leftThrust, rightThrust);
 
 
-        target.attr("transform", "translate(" + targetPt.x + "," + targetPt.y + ")");
 
-        ship.point (Vector2d.xy(0, 1));
+        ship.pointAt (targetPt);
 
-        ship.applyFunction (function (particle) {
-            if (particle.position.y > 0.5) {
-                particle.applyAcceleration(Vector2d.xy(0, -9.8));
-            } else if (particle.position.y > 0.0) {
-                var scale = 0.5 - particle.position.y;
-                particle.applyAcceleration(Vector2d.xy(0, -9.8 * scale));
-                particle.applyDamping(-scale);
-            } else {
-                particle.applyAcceleration(Vector2d.xy(0, -5.0 * particle.position.y));
-                particle.applyDamping(-0.5);
-            }
-        });
+
+        if (false) {
+            ship.applyFunction (function (particle) {
+                if (particle.position.y > 0.5) {
+                    particle.applyAcceleration(Vector2d.xy(0, -9.8));
+                } else if (particle.position.y > 0.0) {
+                    var scale = 0.5 - particle.position.y;
+                    particle.applyAcceleration(Vector2d.xy(0, -9.8 * scale));
+                    particle.applyDamping(-scale);
+                } else {
+                    particle.applyAcceleration(Vector2d.xy(0, -5.0 * particle.position.y));
+                    particle.applyDamping(-0.5);
+                }
+            });
+        }
         ship.update(deltaTime);
         ship.paint();
     }, 1000 * deltaTime);

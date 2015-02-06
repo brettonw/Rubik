@@ -33,3 +33,16 @@ body
     fill                : #f0f0ff;
 }
 
+/*
+line {
+    pointer-events      : none;
+}
+
+circle {
+    pointer-events      : none;
+}
+
+polygon {
+    pointer-events      : none;
+}
+*/
