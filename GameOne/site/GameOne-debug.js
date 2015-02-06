@@ -71,7 +71,9 @@ var Particle = function () {
         this.velocity = this.velocity.add(deltaVelocity);
     };
     _.paint = function () {
-        this.svg.attr("transform", "translate(" + this.position.x + "," + this.position.y + ")");
+        this.svg
+            .attr("cx", this.position.x)
+            .attr("cy", this.position.y);
     }
     return _;
 }();

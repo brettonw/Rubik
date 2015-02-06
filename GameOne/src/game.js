@@ -65,7 +65,9 @@ function initPage() {
         // extract the click location
         var point = d3.mouse(this);
         targetPt = Vector2d.a(point);
-        target.attr("transform", "translate(" + targetPt.x + "," + targetPt.y + ")");
+        target
+            .attr("cx", targetPt.x)
+            .attr("cy", targetPt.y);
         //console.log ("XY (" + targetPt.toString() + ")");
     });
 
@@ -81,7 +83,6 @@ function initPage() {
         .attr("height", 12)
         .attr("fill", "white")
         .attr("fill-opacity", "0.5");
-
 
     // add a grid
     var gridLines = [0.0];
