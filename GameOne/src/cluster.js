@@ -10,13 +10,14 @@ var Cluster = function () {
 
     // how many polishing steps we want to take to allow the frame of reference
     // to be stabilized after applying forces
-    var subStepCount = 3;
+    _.subStepCount = 5;
 
     // incorporate the aggregate result of our particle cluster simulation to
     // show the larger object behavior. we include measuring velocities and
     // acceleration of the aggregate object
-    var updateFrameOfReference = function (cluster) {
-        var particles = cluster.particles;
+    _.updateFrameOfReference = function () {
+        var scope = this;
+        var particles = this.particles;
 
         // the frame of reference sets the position at the centroid of the
         // particle cluster
@@ -24,29 +25,41 @@ var Cluster = function () {
             .add(particles[1].position)
             .add(particles[2].position)
             .scale(1.0 / 3.0);
-        cluster.velocity = position
-            .subtract(cluster.position)
+        this.velocity = position
+            .subtract(this.position)
             .scale(1.0 / deltaTime);
-        cluster.position = position;
+        this.position = position;
 
         // the frame of reference is computed as the line between [0,1] and
         // [2,midpoint(0,1)], we might need to do a "polish" step on this in
         // case those lines aren't actually perpendicular in the simulation
-        var midpoint = cluster.particles[0].position
-            .add(cluster.particles[1].position)
+        var midpoint = particles[0].position
+            .add(particles[1].position)
             .scale(0.5);
-        var xAxis = cluster.particles[2].position
+        var xAxis = particles[2].position
             .subtract(midpoint).normalized();
+        var yAxis = xAxis.perpendicular();
+
+        // the spin position has to be calculated carefully because of the
+        // roll over of the coordinate system at pi/-pi, we assume that the
+        // sampling rate is sufficient to never see the object rotating faster
+        // than pi radians per frame in either direction
         var spinPosition = Math.atan2(xAxis.y, xAxis.x);
-        cluster.spinVelocity = (spinPosition - cluster.spinPosition) / deltaTime;
-        cluster.spinPosition = spinPosition;
+        var deltaSpinPosition = spinPosition - this.spinPosition;
+    	while (deltaSpinPosition > Math.PI) {
+            deltaSpinPosition -= (Math.PI * 2.0);
+        }
+        while (deltaSpinPosition < -Math.PI) {
+            deltaSpinPosition += (Math.PI * 2.0);
+        }
+        this.spinVelocity = deltaSpinPosition / deltaTime;
+        this.spinPosition = spinPosition;
 
         // reset the particles to be where they are supposed to be, this is
         // kind of cheating, but it resolves the drift problem that can only
         // be fixed by going to much higher simulation rates
-        var yAxis = xAxis.perpendicular();
         var resetParticle = function (i) {
-            particles[i].position = cluster.position
+            particles[i].position = scope.position
                 .add(xAxis.scale(points[i].x))
                 .add(yAxis.scale(points[i].y));
         }
@@ -76,7 +89,7 @@ var Cluster = function () {
         this.spinVelocity = 0;
 
         // update the frame of reference
-        updateFrameOfReference(this);
+        this.updateFrameOfReference();
     }
 
     _.init = function (name, position, spinPosition) {
@@ -174,15 +187,15 @@ var Cluster = function () {
             scope.particles[2].update(dT);
         }
 
-        var dT = deltaTime / subStepCount;
-        for (var i = 0; i < subStepCount; ++i) {
+        var dT = deltaTime / this.subStepCount;
+        for (var i = 0; i < this.subStepCount; ++i) {
             subStep(dT);
         }
     };
 
     _.paint = function () {
         // update the frame of reference
-        updateFrameOfReference(this);
+        this.updateFrameOfReference();
 
         // update the ghost
         this.svg.attr("transform", "translate(" + this.position.x + "," + this.position.y + ") rotate(" + (this.spinPosition * (180.0 / Math.PI)) + ", 0, 0)");

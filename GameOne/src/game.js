@@ -1,5 +1,5 @@
 var scale = 1.0;
-var deltaTime = 1.0 / 20.0;
+var deltaTime = 1.0 / 60.0;
 
 var leftkeydown = false;
 var upkeydown = false;
@@ -51,6 +51,16 @@ function initPage() {
                 );
         })
     );
+
+    // add a block of text we'll use to display the frame rate
+    var fps = svg.append("text")
+        .attr("x", 5)
+        .attr("y", 20)
+        .attr("font-family", "sans-serif")
+        .attr("font-size", "20px")
+        .attr("fill", "black")
+        .text("123");
+
 
     // create a child g element to receive the universe transform (invert y and scale the view to [0..1, 0..1])
     svg = child.append("g").attr("class", "gameDisplay");
@@ -123,9 +133,24 @@ function initPage() {
         .attr("stroke-opacity", "1.0")
         .attr("r", 0.01);
 
-
     var ship = Object.create(Ship).init("Ship 1", Vector2d.zero(), 0).makeGeometry(svg);
+
+    var frameCounter = 0;
+    var startTime;
     var gametimer = setInterval(function () {
+        // update the clock display
+        if (frameCounter++ == 0) {
+            startTime = new Date ();
+            fps.text ("0 fps");
+        } else {
+            var now = new Date ();
+            var delta = now.valueOf () - startTime.valueOf ();
+            var seconds = delta / 1000;
+            var frames_per_second = frameCounter / seconds;
+            fps.text(frames_per_second.toPrecision(5) + " fps");
+        }
+
+        // play the game
         var leftThrust = 0.0;
         var rightThrust = 0.0;
         if (upkeydown) { leftThrust += 1.0; rightThrust += 1.0; }
@@ -158,7 +183,6 @@ function initPage() {
         ship.update(deltaTime);
         ship.paint();
     }, 1000 * deltaTime);
-
 
     // need a pause time button
 }
