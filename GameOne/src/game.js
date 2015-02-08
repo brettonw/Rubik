@@ -169,13 +169,13 @@ function initPage() {
             // the 0.1 forces the ship to always stay focused forwards - it adds a
             // missile-like component to the ship behavior, which will also be good
             // for path-tracking operations
-            ship.go (targetGo, -1.0);
+            ship.go (targetGo);
         } else if (downkeydown) {
             ship.applyFunction (function (particle) {
                 particle.applyDamping(-0.5);
             });
         } else {
-            ship.go (Vector2d.zero (), -1.0);
+            ship.stop ();
         }
 
         // gravity

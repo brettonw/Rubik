@@ -528,28 +528,30 @@ var Ship = function () {
         this.point (direction);
     }
 
-    _.go = function (targetVelocity, clamp) {
+    var shipGo = function (ship, targetVelocity, clamp, fudgeFactor, precisionExponent) {
 
-        var speed = targetVelocity.norm ();
+
+
+        var speed = targetVelocity.norm () * fudgeFactor;
 
         var axis = (speed > 0) ?
             targetVelocity.scale (1.0 / speed) :
-            (this.velocity.normSq () > 0 ?
-                this.velocity.normalized () :
-                Vector2d.angle (this.spinPosition));
+            (ship.velocity.normSq () > 0 ?
+                ship.velocity.normalized () :
+                Vector2d.angle (ship.spinPosition));
         var perp = axis.perpendicular ();
 
 
 
 
-        var axisComponent = Math.max (clamp, speed - (axis.dot (this.velocity)));
-        var perpComponent = 2.0 * perp.dot (this.velocity);
+        var axisComponent = Math.max (clamp, speed - (axis.dot (ship.velocity)));
+        var perpComponent = 2.0 * perp.dot (ship.velocity);
 
 
         if ((Math.abs(axisComponent) > 0) || (Math.abs(perpComponent) > 0)) {
 
             var pointDirection = axis.scale (axisComponent).add (perp.scale (-perpComponent));
-            var deltaSpinPosition = this.point (pointDirection);
+            var deltaSpinPosition = ship.point (pointDirection);
 
 
             var thrustLevel = 1.0 - (deltaSpinPosition / (Math.PI * 0.5));
@@ -558,14 +560,23 @@ var Ship = function () {
 
 
 
-                thrustLevel = Math.pow (thrustLevel, 3);
-                this.thrust (thrustLevel, thrustLevel);
+                thrustLevel = Math.pow (thrustLevel, precisionExponent);
+                ship.thrust (thrustLevel, thrustLevel);
             }
         }
     }
 
-    _.goWithClamp = function (targetVelocity) {
-        this.go (targetVelocity, 0);
+    _.go = function (targetVelocity) {
+        shipGo (this, targetVelocity, 0.0, 1.0, 2.0);
+    }
+
+    _.goTo = function (targetPoint) {
+        var targetVelocity = targetPoint.subtract (this.position);
+        shipGo (this, targetVelocity, -1.0e3, 0.9, 4.0);
+    }
+
+    _.stop = function () {
+        shipGo (this, Vector2d.zero (), -1.0e3, 1.0, 5.0);
     }
 
     return _;
@@ -727,13 +738,13 @@ function initPage() {
 
 
 
-            ship.go (targetGo, -1.0);
+            ship.go (targetGo);
         } else if (downkeydown) {
             ship.applyFunction (function (particle) {
                 particle.applyDamping(-0.5);
             });
         } else {
-            ship.go (Vector2d.zero (), -1.0);
+            ship.stop ();
         }
 
 

@@ -101,28 +101,30 @@ var Ship = function () {
         this.point (direction);
     }
 
-    _.go = function (targetVelocity, clamp) {
-        // compute the frame for calculations
-        var speed = targetVelocity.norm ();
+    var shipGo = function (ship, targetVelocity, clamp, fudgeFactor, precisionExponent) {
+        // compute the frame for calculations, our target speed is fudged to
+        // allow for latency in the control system, i.e. having to turn around
+        // to decelerate
+        var speed = targetVelocity.norm () * fudgeFactor;
         //console.log ("Go speed = " + speed.toPrecision (5));
         var axis = (speed > 0) ?
             targetVelocity.scale (1.0 / speed) :
-            (this.velocity.normSq () > 0 ?
-                this.velocity.normalized () :
-                Vector2d.angle (this.spinPosition));
+            (ship.velocity.normSq () > 0 ?
+                ship.velocity.normalized () :
+                Vector2d.angle (ship.spinPosition));
         var perp = axis.perpendicular ();
 
         // compute the velocity corrections needed, including a clamped axis
         // component (affects how the ship slows down), and a doubled perp
         // component to help catch the target vector quicker
-        var axisComponent = Math.max (clamp, speed - (axis.dot (this.velocity)));
-        var perpComponent = 2.0 * perp.dot (this.velocity);
+        var axisComponent = Math.max (clamp, speed - (axis.dot (ship.velocity)));
+        var perpComponent = 2.0 * perp.dot (ship.velocity);
 
         // check to see if there's actually any work to do
         if ((Math.abs(axisComponent) > 0) || (Math.abs(perpComponent) > 0)) {
             // compute the target point direction and try to point there
             var pointDirection = axis.scale (axisComponent).add (perp.scale (-perpComponent));
-            var deltaSpinPosition = this.point (pointDirection);
+            var deltaSpinPosition = ship.point (pointDirection);
 
             // if we are pointing the right way (within a few degrees), let's go...
             var thrustLevel = 1.0 - (deltaSpinPosition / (Math.PI * 0.5));
@@ -131,14 +133,23 @@ var Ship = function () {
                 // thrusting along the correcting vector, but the discrete nature of
                 // time in this simulation and our general error tolerance means we
                 // don't want to be too precise.
-                thrustLevel = Math.pow (thrustLevel, 3);
-                this.thrust (thrustLevel, thrustLevel);
+                thrustLevel = Math.pow (thrustLevel, precisionExponent);
+                ship.thrust (thrustLevel, thrustLevel);
             }
         }
     }
 
-    _.goWithClamp = function (targetVelocity) {
-        this.go (targetVelocity, 0);
+    _.go = function (targetVelocity) {
+        shipGo (this, targetVelocity, 0.0, 1.0, 2.0);
+    }
+
+    _.goTo = function (targetPoint) {
+        var targetVelocity = targetPoint.subtract (this.position);
+        shipGo (this, targetVelocity, -1.0e3, 0.9, 4.0);
+    }
+
+    _.stop = function () {
+        shipGo (this, Vector2d.zero (), -1.0e3, 1.0, 5.0);
     }
 
     return _;
