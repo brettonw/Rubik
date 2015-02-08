@@ -151,6 +151,7 @@ function initPage() {
         }
 
         // play the game
+        /*
         var leftThrust = 0.0;
         var rightThrust = 0.0;
         if (upkeydown) { leftThrust += 1.0; rightThrust += 1.0; }
@@ -160,13 +161,22 @@ function initPage() {
         leftThrust = Math.max(-1.0, leftThrust); leftThrust = Math.min(1.0, leftThrust);
         rightThrust = Math.max(-1.0, rightThrust); rightThrust = Math.min(1.0, rightThrust);
         ship.thrust (leftThrust, rightThrust);
+        */
 
-        var targetGo = targetPt.subtract (ship.position);
-        //console.log ("targetGoSpeed = " + targetGoSpeed.toPrecision (5));
-        // the 0.1 forces the ship to always stay focused forwards - it adds a
-        // missile-like component to the ship behavior, which will also be good
-        // for path-tracking operations
-        ship.go (targetGo, 0.1);
+        if (upkeydown) {
+            var targetGo = targetPt.subtract (ship.position);
+            //console.log ("targetGoSpeed = " + targetGoSpeed.toPrecision (5));
+            // the 0.1 forces the ship to always stay focused forwards - it adds a
+            // missile-like component to the ship behavior, which will also be good
+            // for path-tracking operations
+            ship.go (targetGo, -1.0);
+        } else if (downkeydown) {
+            ship.applyFunction (function (particle) {
+                particle.applyDamping(-0.5);
+            });
+        } else {
+            ship.go (Vector2d.zero (), -1.0);
+        }
 
         // gravity
         if (false) {

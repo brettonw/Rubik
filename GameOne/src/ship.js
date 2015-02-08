@@ -105,23 +105,35 @@ var Ship = function () {
         // compute the frame for calculations
         var speed = targetVelocity.norm ();
         //console.log ("Go speed = " + speed.toPrecision (5));
-        var axis = targetVelocity.scale (1.0 / speed);
+        var axis = (speed > 0) ?
+            targetVelocity.scale (1.0 / speed) :
+            (this.velocity.normSq () > 0 ?
+                this.velocity.normalized () :
+                Vector2d.angle (this.spinPosition));
         var perp = axis.perpendicular ();
 
         // compute the velocity corrections needed, including a clamped axis
-        // component so the ship never slows down, and a doubled perp component
-        // to help catch the target vector quicker
+        // component (affects how the ship slows down), and a doubled perp
+        // component to help catch the target vector quicker
         var axisComponent = Math.max (clamp, speed - (axis.dot (this.velocity)));
         var perpComponent = 2.0 * perp.dot (this.velocity);
 
-        var pointDirection = axis.scale (axisComponent).add (perp.scale (-perpComponent));
-        var deltaSpinPosition = this.point (pointDirection);
+        // check to see if there's actually any work to do
+        if ((Math.abs(axisComponent) > 0) || (Math.abs(perpComponent) > 0)) {
+            // compute the target point direction and try to point there
+            var pointDirection = axis.scale (axisComponent).add (perp.scale (-perpComponent));
+            var deltaSpinPosition = this.point (pointDirection);
 
-        // if we are pointing the right way (within a few degrees), let's go...
-        var thrustLevel = 1.0 - (deltaSpinPosition / (Math.PI * 0.5));
-        if (thrustLevel > 0) {
-            thrustLevel *= thrustLevel;
-            this.thrust (thrustLevel, thrustLevel);
+            // if we are pointing the right way (within a few degrees), let's go...
+            var thrustLevel = 1.0 - (deltaSpinPosition / (Math.PI * 0.5));
+            if (thrustLevel > 0) {
+                // we exponentiate the thrust level to increase the accuracy of
+                // thrusting along the correcting vector, but the discrete nature of
+                // time in this simulation and our general error tolerance means we
+                // don't want to be too precise.
+                thrustLevel = Math.pow (thrustLevel, 3);
+                this.thrust (thrustLevel, thrustLevel);
+            }
         }
     }
 

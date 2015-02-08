@@ -532,7 +532,11 @@ var Ship = function () {
 
         var speed = targetVelocity.norm ();
 
-        var axis = targetVelocity.scale (1.0 / speed);
+        var axis = (speed > 0) ?
+            targetVelocity.scale (1.0 / speed) :
+            (this.velocity.normSq () > 0 ?
+                this.velocity.normalized () :
+                Vector2d.angle (this.spinPosition));
         var perp = axis.perpendicular ();
 
 
@@ -541,14 +545,22 @@ var Ship = function () {
         var axisComponent = Math.max (clamp, speed - (axis.dot (this.velocity)));
         var perpComponent = 2.0 * perp.dot (this.velocity);
 
-        var pointDirection = axis.scale (axisComponent).add (perp.scale (-perpComponent));
-        var deltaSpinPosition = this.point (pointDirection);
+
+        if ((Math.abs(axisComponent) > 0) || (Math.abs(perpComponent) > 0)) {
+
+            var pointDirection = axis.scale (axisComponent).add (perp.scale (-perpComponent));
+            var deltaSpinPosition = this.point (pointDirection);
 
 
-        var thrustLevel = 1.0 - (deltaSpinPosition / (Math.PI * 0.5));
-        if (thrustLevel > 0) {
-            thrustLevel *= thrustLevel;
-            this.thrust (thrustLevel, thrustLevel);
+            var thrustLevel = 1.0 - (deltaSpinPosition / (Math.PI * 0.5));
+            if (thrustLevel > 0) {
+
+
+
+
+                thrustLevel = Math.pow (thrustLevel, 3);
+                this.thrust (thrustLevel, thrustLevel);
+            }
         }
     }
 
@@ -709,24 +721,20 @@ function initPage() {
             var frames_per_second = frameCounter / seconds;
             fps.text(frames_per_second.toPrecision(5) + " fps");
         }
-
-
-        var leftThrust = 0.0;
-        var rightThrust = 0.0;
-        if (upkeydown) { leftThrust += 1.0; rightThrust += 1.0; }
-        if (downkeydown) { leftThrust += -0.5; rightThrust += -0.5; }
-        if (rightkeydown) { leftThrust += 0.5; rightThrust += -0.5; }
-        if (leftkeydown) { leftThrust += -0.5; rightThrust += 0.5; }
-        leftThrust = Math.max(-1.0, leftThrust); leftThrust = Math.min(1.0, leftThrust);
-        rightThrust = Math.max(-1.0, rightThrust); rightThrust = Math.min(1.0, rightThrust);
-        ship.thrust (leftThrust, rightThrust);
-
-        var targetGo = targetPt.subtract (ship.position);
+        if (upkeydown) {
+            var targetGo = targetPt.subtract (ship.position);
 
 
 
 
-        ship.go (targetGo, 0.1);
+            ship.go (targetGo, -1.0);
+        } else if (downkeydown) {
+            ship.applyFunction (function (particle) {
+                particle.applyDamping(-0.5);
+            });
+        } else {
+            ship.go (Vector2d.zero (), -1.0);
+        }
 
 
         if (false) {
