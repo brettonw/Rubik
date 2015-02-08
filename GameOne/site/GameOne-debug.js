@@ -548,7 +548,7 @@ var Ship = function () {
         var perpComponent = 2.0 * perp.dot (ship.velocity);
 
 
-        if ((Math.abs(axisComponent) > 0) || (Math.abs(perpComponent) > 0)) {
+        if ((Math.abs(axisComponent) > 0.001) || (Math.abs(perpComponent) > 0.001)) {
 
             var pointDirection = axis.scale (axisComponent).add (perp.scale (-perpComponent));
             var deltaSpinPosition = ship.point (pointDirection);
@@ -563,6 +563,8 @@ var Ship = function () {
                 thrustLevel = Math.pow (thrustLevel, precisionExponent);
                 ship.thrust (thrustLevel, thrustLevel);
             }
+        } else {
+            ship.point (axis);
         }
     }
 
