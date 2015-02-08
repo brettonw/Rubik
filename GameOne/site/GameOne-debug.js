@@ -36,6 +36,10 @@ var Vector2d = function () {
 
 
     _.perpendicular = function () { return makeVector(-this.y, this.x); }
+    _.reflect = function (v, n) {
+
+        return v.subtract (n.scale (v.dot(n) * 2.0));
+    }
 
 
     _.toString = function () { return this.x + "," + this.y; }
@@ -503,15 +507,20 @@ var Ship = function () {
         while (deltaSpinPosition < -Math.PI) {
             deltaSpinPosition += (Math.PI * 2.0);
         }
+        var deltaSpinPositionMagnitude = Math.abs (deltaSpinPosition);
 
 
 
-        var timeToTargetSpinPosition = 0.15 * (1 + Math.abs (deltaSpinPosition));
+        var timeToTargetSpinPosition = 0.15 * (1 + deltaSpinPositionMagnitude);
         var velocityToTargetSpinPosition = (deltaSpinPosition / timeToTargetSpinPosition);
         var deltaVelocityNeeded = velocityToTargetSpinPosition - this.spinVelocity;
         var thrustNeeded = deltaVelocityNeeded / this.spinAcceleration;
         var clampedThrust = Math.min(Math.max(thrustNeeded, -1.0), 1.0);
         this.thrust (-clampedThrust, clampedThrust);
+
+
+
+        return deltaSpinPositionMagnitude;
     }
 
     _.pointAt = function (point) {
@@ -519,10 +528,34 @@ var Ship = function () {
         this.point (direction);
     }
 
+    _.go = function (targetVelocity) {
+
+        var speed = targetVelocity.norm ();
+
+        var axis = targetVelocity.scale (1.0 / speed);
+        var perp = axis.perpendicular ();
+
+
+
+
+        var axisComponent = Math.max (0.0, speed - (axis.dot (this.velocity)));
+        var perpComponent = 2.0 * perp.dot (this.velocity);
+
+        var pointDirection = axis.scale (axisComponent).add (perp.scale (-perpComponent));
+        var deltaSpinPosition = this.point (pointDirection);
+
+
+        var thrustLevel = 1.0 - (deltaSpinPosition / (Math.PI * 0.5));
+        if (thrustLevel > 0) {
+            thrustLevel *= thrustLevel;
+            this.thrust (thrustLevel, thrustLevel);
+        }
+    }
+
     return _;
 }();
 var scale = 1.0;
-var deltaTime = 1.0 / 30.0;
+var deltaTime = 1.0 / 60.0;
 
 var leftkeydown = false;
 var upkeydown = false;
@@ -684,9 +717,11 @@ function initPage() {
         rightThrust = Math.max(-1.0, rightThrust); rightThrust = Math.min(1.0, rightThrust);
         ship.thrust (leftThrust, rightThrust);
 
+        var targetGo = targetPt.subtract (ship.position);
+        var targetGoSpeed = Math.max (1.0, targetGo.normalize ());
+        targetGo = targetGo.scale (targetGoSpeed);
 
-
-        ship.pointAt (targetPt);
+        ship.go (targetGo);
 
 
         if (false) {
@@ -706,7 +741,6 @@ function initPage() {
         ship.update(deltaTime);
         ship.paint();
     }, 1000 * deltaTime);
-
 
 
 }

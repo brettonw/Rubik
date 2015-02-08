@@ -32,6 +32,10 @@ var Vector2d = function () {
 
     // frame related methods
     _.perpendicular = function () { return makeVector(-this.y, this.x); }
+    _.reflect = function (v, n) {
+    //	return v - (n * (R(2.0) * (v | n))); //	return the computed vector
+        return v.subtract (n.scale (v.dot(n) * 2.0));
+    }
 
     // utility methods
     _.toString = function () { return this.x + "," + this.y; }

@@ -161,9 +161,11 @@ function initPage() {
         rightThrust = Math.max(-1.0, rightThrust); rightThrust = Math.min(1.0, rightThrust);
         ship.thrust (leftThrust, rightThrust);
 
-        // put the target under the mouse
-
-        ship.pointAt (targetPt);
+        var targetGo = targetPt.subtract (ship.position);
+        var targetGoSpeed = Math.max (1.0, targetGo.normalize ());
+        targetGo = targetGo.scale (targetGoSpeed);
+        //console.log ("targetGoSpeed = " + targetGoSpeed.toPrecision (5));
+        ship.go (targetGo);
 
         // gravity
         if (false) {

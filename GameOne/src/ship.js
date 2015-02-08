@@ -80,10 +80,11 @@ var Ship = function () {
         while (deltaSpinPosition < -Math.PI) {
             deltaSpinPosition += (Math.PI * 2.0);
         }
+        var deltaSpinPositionMagnitude = Math.abs (deltaSpinPosition);
 
         // compute the desired change in rotational velocity, and the thrust
         // associated with that, then apply it
-        var timeToTargetSpinPosition = 0.15 * (1 + Math.abs (deltaSpinPosition));
+        var timeToTargetSpinPosition = 0.15 * (1 + deltaSpinPositionMagnitude);
         var velocityToTargetSpinPosition = (deltaSpinPosition / timeToTargetSpinPosition);
         var deltaVelocityNeeded = velocityToTargetSpinPosition - this.spinVelocity;
         var thrustNeeded = deltaVelocityNeeded / this.spinAcceleration;
@@ -91,19 +92,37 @@ var Ship = function () {
         this.thrust (-clampedThrust, clampedThrust);
         //console.log ("thrust: " + clampedThrust);
 
-/*
-        var deltaSpinVelocity = (delta / timeToReachGoal) - this.spinVelocity;
-        var sign = (deltaSpinVelocity < 0) ? -1 : ((deltaSpinVelocity > 0) ? 1 : 0);
-        var stiffness = 1.0;
-        var thrust = stiffness * sign * Math.min (1.0, sign * deltaSpinVelocity / this.spinAcceleration);
-        this.thrust (-thrust, thrust);
-        //console.log ("thrust: " + thrust);
-*/
+        // return how close the ship is to pointing in the right direction
+        return deltaSpinPositionMagnitude;
     }
 
     _.pointAt = function (point) {
         var direction = point.subtract (this.position).normalized ();
         this.point (direction);
+    }
+
+    _.go = function (targetVelocity) {
+        // compute the frame for calculations
+        var speed = targetVelocity.norm ();
+        //console.log ("Go speed = " + speed.toPrecision (5));
+        var axis = targetVelocity.scale (1.0 / speed);
+        var perp = axis.perpendicular ();
+
+        // compute the velocity corrections needed, including a clamped axis
+        // component so the ship never slows down, and a doubled perp component
+        // to help catch the target vector quicker
+        var axisComponent = Math.max (0.0, speed - (axis.dot (this.velocity)));
+        var perpComponent = 2.0 * perp.dot (this.velocity);
+
+        var pointDirection = axis.scale (axisComponent).add (perp.scale (-perpComponent));
+        var deltaSpinPosition = this.point (pointDirection);
+
+        // if we are pointing the right way (within a few degrees), let's go...
+        var thrustLevel = 1.0 - (deltaSpinPosition / (Math.PI * 0.5));
+        if (thrustLevel > 0) {
+            thrustLevel *= thrustLevel;
+            this.thrust (thrustLevel, thrustLevel);
+        }
     }
 
     return _;
