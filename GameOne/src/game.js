@@ -162,10 +162,11 @@ function initPage() {
         ship.thrust (leftThrust, rightThrust);
 
         var targetGo = targetPt.subtract (ship.position);
-        var targetGoSpeed = Math.max (1.0, targetGo.normalize ());
-        targetGo = targetGo.scale (targetGoSpeed);
         //console.log ("targetGoSpeed = " + targetGoSpeed.toPrecision (5));
-        ship.go (targetGo);
+        // the 0.1 forces the ship to always stay focused forwards - it adds a
+        // missile-like component to the ship behavior, which will also be good
+        // for path-tracking operations
+        ship.go (targetGo, 0.1);
 
         // gravity
         if (false) {

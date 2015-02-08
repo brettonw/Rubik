@@ -101,7 +101,7 @@ var Ship = function () {
         this.point (direction);
     }
 
-    _.go = function (targetVelocity) {
+    _.go = function (targetVelocity, clamp) {
         // compute the frame for calculations
         var speed = targetVelocity.norm ();
         //console.log ("Go speed = " + speed.toPrecision (5));
@@ -111,7 +111,7 @@ var Ship = function () {
         // compute the velocity corrections needed, including a clamped axis
         // component so the ship never slows down, and a doubled perp component
         // to help catch the target vector quicker
-        var axisComponent = Math.max (0.0, speed - (axis.dot (this.velocity)));
+        var axisComponent = Math.max (clamp, speed - (axis.dot (this.velocity)));
         var perpComponent = 2.0 * perp.dot (this.velocity);
 
         var pointDirection = axis.scale (axisComponent).add (perp.scale (-perpComponent));
@@ -123,6 +123,10 @@ var Ship = function () {
             thrustLevel *= thrustLevel;
             this.thrust (thrustLevel, thrustLevel);
         }
+    }
+
+    _.goWithClamp = function (targetVelocity) {
+        this.go (targetVelocity, 0);
     }
 
     return _;

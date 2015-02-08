@@ -528,7 +528,7 @@ var Ship = function () {
         this.point (direction);
     }
 
-    _.go = function (targetVelocity) {
+    _.go = function (targetVelocity, clamp) {
 
         var speed = targetVelocity.norm ();
 
@@ -538,7 +538,7 @@ var Ship = function () {
 
 
 
-        var axisComponent = Math.max (0.0, speed - (axis.dot (this.velocity)));
+        var axisComponent = Math.max (clamp, speed - (axis.dot (this.velocity)));
         var perpComponent = 2.0 * perp.dot (this.velocity);
 
         var pointDirection = axis.scale (axisComponent).add (perp.scale (-perpComponent));
@@ -550,6 +550,10 @@ var Ship = function () {
             thrustLevel *= thrustLevel;
             this.thrust (thrustLevel, thrustLevel);
         }
+    }
+
+    _.goWithClamp = function (targetVelocity) {
+        this.go (targetVelocity, 0);
     }
 
     return _;
@@ -718,10 +722,11 @@ function initPage() {
         ship.thrust (leftThrust, rightThrust);
 
         var targetGo = targetPt.subtract (ship.position);
-        var targetGoSpeed = Math.max (1.0, targetGo.normalize ());
-        targetGo = targetGo.scale (targetGoSpeed);
 
-        ship.go (targetGo);
+
+
+
+        ship.go (targetGo, 0.1);
 
 
         if (false) {
