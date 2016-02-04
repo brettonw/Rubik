@@ -74,14 +74,26 @@ function scoreCube (srcCube, dstCube) {
     return score;
 }
 
+// polygonClipId is a global to make a GUID used for the clipping path, because
+// SVG is stupid and won't let me define it inside the object itself
+var polygonClipId = 0;
 function makeSvgPolygon (color, points) {
-    var polygon = "<polygon points=\"";
-    polygon += points[0][0] + "," + points[0][1] + " ";
-    polygon += points[1][0] + "," + points[1][1] + " ";
-    polygon += points[2][0] + "," + points[2][1] + " ";
-    polygon += points[3][0] + "," + points[3][1] + "\" ";
-    polygon += "fill=\"" + color + "\" stroke=\"#202020\" stroke-width=\"0.025\" stroke-linecap=\"round\"/>";
-    return polygon;
+	polygonClipId++;
+	function makeSvgPolygonPoints (points, attributes) {
+		var polygonPoints = "<polygon points=\"";
+		polygonPoints += points[0][0] + "," + points[0][1] + " ";
+		polygonPoints += points[1][0] + "," + points[1][1] + " ";
+		polygonPoints += points[2][0] + "," + points[2][1] + " ";
+		polygonPoints += points[3][0] + "," + points[3][1] + "\" ";
+		polygonPoints += attributes;
+		polygonPoints += " />";
+		return polygonPoints;
+	}
+	
+	var defs = "<defs><clipPath id=\"clipPath" + polygonClipId + "\">" + makeSvgPolygonPoints (points, "") + "</clipPath></defs>\n";
+	var polygon = makeSvgPolygonPoints (points, "fill=\"" + color + "\" stroke=\"#020202\" stroke-width=\"0.025\" clip-path=\"url(#clipPath" + polygonClipId + ")\"");
+	
+    return defs + polygon;
 }
 
 function makeSvgFace (cube, face, corners) {
